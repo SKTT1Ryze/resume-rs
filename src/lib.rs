@@ -53,18 +53,36 @@ pub trait Inner {
 }
 
 pub trait Time {
-    fn year(&self) -> Option<u32>;
-    fn month(&self) -> Option<String>;
-    fn day(&self) -> Option<u32>;
+    fn year(&self) -> Option<(u32, u32)> {
+        None
+    }
+    fn month(&self) -> Option<(u8, u8)> {
+        None
+    }
+    fn day(&self) -> Option<(u32, u32)> {
+        None
+    }
 }
 
 pub trait Situation {
-    fn galaxy(&self) -> Option<String>;
-    fn planet(&self) -> Option<String>;
-    fn country(&self) -> Option<String>;
-    fn province(&self) -> Option<String>;
-    fn city(&self) -> Option<String>;
-    fn other(&self) -> Option<String>;
+    fn galaxy(&self) -> Option<String> {
+        None
+    }
+    fn planet(&self) -> Option<String> {
+        None
+    }
+    fn country(&self) -> Option<String> {
+        None
+    }
+    fn province(&self) -> Option<String> {
+        None
+    }
+    fn city(&self) -> Option<String> {
+        None
+    }
+    fn other(&self) -> Option<String> {
+        None
+    }
 }
 
 pub trait IntoInner {

@@ -5,6 +5,7 @@
 //! ```
 //! 
 
+use education::{Degree, EduInner, Education};
 use info::{InfoInner, PersonalInfo};
 
 use super::{Template, Typography};
@@ -41,19 +42,47 @@ impl TemplateType1 {
         email: &'static S,
         github: &'static S
     )
-    where S: AsRef<str> + 'static
+
+    where S: AsRef<str>
     {
         let type1_info_inner = Type1InfoInner (
             name.as_ref(),
             phone.as_ref(),
             email.as_ref(),
             github.as_ref(),
-            Type1TimeSituation::default()
+            Type1InfoTimeSituation::default()
         );
         let type1_info = PersonalInfo::new(type1_info_inner);
         self.resume.append_element(type1_info);
     }
 
+    pub fn undergraduate<S>(
+        &mut self,
+        school: &'static S,
+        major: &'static S,
+        year: (u32, u32),
+        month: (u8, u8),
+        situation: (&'static S, &'static S)
+    )
+    where S: AsRef<str>
+    {
+        let type1_edu_inner = Type1Undergraduate {
+            school: school.as_ref(),
+            major: major.as_ref(),
+            time_situation: Type1UndergraduateTimeSituation (
+                Type1UndergraduateTime {
+                    year,
+                    month
+                },
+                Type1UndergraduateSituation {
+                    province: String::from(situation.0.as_ref()),
+                    city: String::from(situation.1.as_ref())
+                }
+            )
+        };
+        let mut type1_degree = Education::default();
+        type1_degree.append_inner(type1_edu_inner);
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -86,7 +115,7 @@ pub struct Type1InfoInner<'a> (
     &'a str,
     &'a str,
     &'a str,
-    Type1TimeSituation,
+    Type1InfoTimeSituation,
 );
 
 impl<'a> IntoInner for Type1InfoInner<'a> {
@@ -114,52 +143,84 @@ impl<'a> InfoInner for Type1InfoInner<'a> {
 }
 
 #[derive(Clone, Copy, Default)]
-pub struct Type1TimeSituation (
-    Type1Time,
-    Type1Situation
+pub struct Type1InfoTimeSituation (
+    Type1InfoTime,
+    Type1InfoSituation
 );
 
 #[derive(Clone, Copy, Default)]
-struct Type1Time;
-impl Time for Type1Time {
-    fn year(&self) -> Option<u32> {
-        None
-    }
-    fn month(&self) -> Option<String> {
-        None
-    }
-    fn day(&self) -> Option<u32> {
-        None
-    }
-}
-#[derive(Clone, Copy, Default)]
-struct Type1Situation;
-impl Situation for Type1Situation {
-    fn galaxy(&self) -> Option<String> {
-        None
-    }
-    fn planet(&self) -> Option<String> {
-        None
-    }
-    fn country(&self) -> Option<String> {
-        None
-    }
-    fn province(&self) -> Option<String> {
-        None
-    }
-    fn city(&self) -> Option<String> {
-        None
-    }
-    fn other(&self) -> Option<String> {
-        None
-    }
-}
+struct Type1InfoTime;
+impl Time for Type1InfoTime {}
 
-impl Inner for Type1TimeSituation {
+#[derive(Clone, Copy, Default)]
+struct Type1InfoSituation;
+impl Situation for Type1InfoSituation {}
+
+impl Inner for Type1InfoTimeSituation {
     fn time(&self) -> Box<dyn Time> {
         Box::new(self.0)
     }
     fn situation(&self) -> Box<dyn Situation> {
         Box::new(self.1)
+    }
+}
+
+pub struct Type1Undergraduate<'a> {
+    school: &'a str,
+    major: &'a str,
+    time_situation: Type1UndergraduateTimeSituation
+}
+
+impl<'a> IntoInner for Type1Undergraduate<'a> {
+    fn to_inner(&self) -> Box<dyn Inner> {
+        Box::new(self.time_situation.clone())
+    }
+}
+
+impl<'a> EduInner for Type1Undergraduate<'a> {
+    fn experience(&self) -> Vec<Degree> {
+        vec![Degree::Undergraduate(String::from(self.school), String::from(self.major))]
+    }
+}
+
+#[derive(Clone)]
+pub struct Type1UndergraduateTimeSituation (
+    Type1UndergraduateTime,
+    Type1UndergraduateSituation
+);
+
+impl Inner for Type1UndergraduateTimeSituation {
+    fn time(&self) -> Box<dyn Time> {
+        Box::new(self.0)
+    }
+    fn situation(&self) -> Box<dyn Situation> {
+        Box::new(self.1.clone())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct Type1UndergraduateTime {
+    year: (u32, u32),
+    month: (u8, u8)
+}
+impl Time for Type1UndergraduateTime {
+    fn year(&self) -> Option<(u32, u32)> {
+        Some(self.year)
+    }
+    fn month(&self) -> Option<(u8, u8)> {
+        Some(self.month)
+    }
+}
+#[derive(Clone)]
+pub struct Type1UndergraduateSituation {
+    province: String,
+    city: String
+}
+
+impl Situation for Type1UndergraduateSituation {
+    fn province(&self) -> Option<String> {
+        Some(self.province.clone())
+    }
+    fn city(&self) -> Option<String> {
+        Some(self.city.clone())
     }
 }

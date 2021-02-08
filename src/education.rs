@@ -14,7 +14,7 @@ pub struct Education {
 }
 
 impl Education {
-    fn append_inner<I: EduInner + 'static>(&mut self, inner: I) {
+    pub fn append_inner<I: EduInner + 'static>(&mut self, inner: I) {
         self.inners.push(Box::new(inner));
     }
 }
