@@ -17,7 +17,7 @@ pub struct Work {
 }
 
 impl Work {
-    fn append_inner<I: WorkInner + 'static>(&mut self, inner: I) {
+    pub fn append_inner<I: WorkInner + 'static>(&mut self, inner: I) {
         self.inners.push(Box::new(inner));
     }
 }
@@ -37,7 +37,14 @@ impl ResumeElement for Work {
 }
 
 pub trait WorkInner: IntoInner {
+    fn class(&self) -> WorkClass;
     fn company(&self) -> String;
     fn position(&self) -> String;
     fn content(&self) -> Vec<String>;
+}
+
+pub enum WorkClass {
+    Internship,
+    FullTime,
+    Other(String)
 }

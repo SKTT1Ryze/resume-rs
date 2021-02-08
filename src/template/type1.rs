@@ -7,6 +7,7 @@
 
 use education::{Degree, EduInner, Education};
 use info::{InfoInner, PersonalInfo};
+use work::{Work, WorkClass, WorkInner};
 
 use super::{Template, Typography};
 use crate::*;
@@ -41,8 +42,7 @@ impl TemplateType1 {
         phone: &'static S,
         email: &'static S,
         github: &'static S
-    )
-
+    ) -> &mut Self
     where S: AsRef<str>
     {
         let type1_info_inner = Type1InfoInner (
@@ -54,6 +54,7 @@ impl TemplateType1 {
         );
         let type1_info = PersonalInfo::new(type1_info_inner);
         self.resume.append_element(type1_info);
+        self
     }
 
     pub fn undergraduate<S>(
@@ -63,7 +64,7 @@ impl TemplateType1 {
         year: (u32, u32),
         month: (u8, u8),
         situation: (&'static S, &'static S)
-    )
+    ) -> &mut Self
     where S: AsRef<str>
     {
         let type1_edu_inner = Type1Undergraduate {
@@ -82,6 +83,74 @@ impl TemplateType1 {
         };
         let mut type1_degree = Education::default();
         type1_degree.append_inner(type1_edu_inner);
+        self.resume.append_element(type1_degree);
+        self
+    }
+
+    pub fn internship<S>(
+        &mut self,
+        company: &'static S,
+        position: &'static S,
+        content: &'static Vec<S>,
+        year: (u32, u32),
+        month: (u8, u8),
+        situation: (&'static S, &'static S)
+    ) -> &mut Self
+    where S: AsRef<str>
+    {
+        let c: Vec<&str> = content.iter().map(|c| c.as_ref()).collect();
+        let type1_internship_inner = Type1Internship {
+            company: company.as_ref(),
+            position: position.as_ref(),
+            content: c,
+            time_situation: Type1WorkTimeSituation (
+                Type1WorkTime {
+                    year,
+                    month
+                },
+                Type1WorkSituation {
+                    province: String::from(situation.0.as_ref()),
+                    city: String::from(situation.1.as_ref())
+                }
+            )
+        };
+        let mut type1_internship = Work::default();
+        type1_internship.append_inner(type1_internship_inner);
+        self.resume.append_element(type1_internship);
+        self
+    }
+
+    pub fn fulltime_work<S>(
+        &mut self,
+        company: &'static S,
+        position: &'static S,
+        content: &'static Vec<S>,
+        year: (u32, u32),
+        month: (u8, u8),
+        situation: (&'static S, &'static S)
+    ) -> &mut Self
+    where S: AsRef<str>
+    {
+        let c: Vec<&str> = content.iter().map(|c| c.as_ref()).collect();
+        let type1_fulltime_inner = Type1FullTimeWork {
+            company: company.as_ref(),
+            position: position.as_ref(),
+            content: c,
+            time_situation: Type1WorkTimeSituation (
+                Type1WorkTime {
+                    year,
+                    month
+                },
+                Type1WorkSituation {
+                    province: String::from(situation.0.as_ref()),
+                    city: String::from(situation.1.as_ref())
+                }
+            )
+        };
+        let mut type1_fulltime = Work::default();
+        type1_fulltime.append_inner(type1_fulltime_inner);
+        self.resume.append_element(type1_fulltime);
+        self
     }
 }
 
@@ -217,6 +286,104 @@ pub struct Type1UndergraduateSituation {
 }
 
 impl Situation for Type1UndergraduateSituation {
+    fn province(&self) -> Option<String> {
+        Some(self.province.clone())
+    }
+    fn city(&self) -> Option<String> {
+        Some(self.city.clone())
+    }
+}
+
+pub struct Type1Internship<'a> {
+    company: &'a str,
+    position: &'a str,
+    content: Vec<&'a str>,
+    time_situation: Type1WorkTimeSituation
+}
+
+impl<'a> IntoInner for Type1Internship<'a> {
+    fn to_inner(&self) -> Box<dyn Inner> {
+        Box::new(self.time_situation.clone())
+    }
+}
+
+impl<'a> WorkInner for Type1Internship<'a> {
+    fn class(&self) -> WorkClass {
+        WorkClass::Internship
+    }
+    fn company(&self) -> String {
+        String::from(self.company)
+    }
+    fn position(&self) -> String {
+        String::from(self.position)
+    }
+    fn content(&self) -> Vec<String> {
+        self.content.iter().map(|c| String::from(*c)).collect()
+    }
+}
+
+pub struct Type1FullTimeWork<'a> {
+    company: &'a str,
+    position: &'a str,
+    content: Vec<&'a str>,
+    time_situation: Type1WorkTimeSituation
+}
+
+impl<'a> IntoInner for Type1FullTimeWork<'a> {
+    fn to_inner(&self) -> Box<dyn Inner> {
+        Box::new(self.time_situation.clone())
+    }
+}
+
+impl<'a> WorkInner for Type1FullTimeWork<'a> {
+    fn class(&self) -> WorkClass {
+        WorkClass::FullTime
+    }
+    fn company(&self) -> String {
+        String::from(self.company)
+    }
+    fn position(&self) -> String {
+        String::from(self.position)
+    }
+    fn content(&self) -> Vec<String> {
+        self.content.iter().map(|c| String::from(*c)).collect()
+    }
+}
+
+#[derive(Clone)]
+pub struct Type1WorkTimeSituation (
+    Type1WorkTime,
+    Type1WorkSituation
+);
+impl Inner for Type1WorkTimeSituation {
+    fn time(&self) -> Box<dyn Time> {
+        Box::new(self.0)
+    }
+    fn situation(&self) -> Box<dyn Situation> {
+        Box::new(self.1.clone())
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Type1WorkTime {
+    year: (u32, u32),
+    month: (u8, u8)
+}
+impl Time for Type1WorkTime {
+    fn year(&self) -> Option<(u32, u32)> {
+        Some(self.year)
+    }
+    fn month(&self) -> Option<(u8, u8)> {
+        Some(self.month)
+    }
+}
+
+#[derive(Clone)]
+pub struct Type1WorkSituation {
+    province: String,
+    city: String
+}
+impl Situation for Type1WorkSituation {
     fn province(&self) -> Option<String> {
         Some(self.province.clone())
     }
