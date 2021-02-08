@@ -1,4 +1,4 @@
-//! Personal information implementation of `ResumeElement` trait  
+//! Personal Information Implementation of `ResumeElement` Trait  
 //! Maily included name, phone, email, etc.  
 //!
 //! These informations were mostly placed at the head of resume.  
@@ -14,14 +14,15 @@ use crate::{
     ResumeElement,
     IntoInner,
 };
-#[derive(Default)]
 pub struct PersonalInfo {
-    inners: Vec<Box<dyn InfoInner>>
+    inner: Box<dyn InfoInner>
 }
 
 impl PersonalInfo {
-    fn append_inner<I: InfoInner + 'static>(&mut self, inner: I) {
-        self.inners.push(Box::new(inner));
+    pub fn new<I: InfoInner + 'static>(inner: I) -> Self {
+        Self {
+            inner: Box::new(inner)
+        }
     }
 }
 
@@ -31,9 +32,7 @@ impl ResumeElement for PersonalInfo {
     }
     fn inner(&self) -> Vec<Box<dyn Inner>> {
         let mut inner = Vec::new();
-        for info_inner in &self.inners {
-            inner.push(info_inner.to_inner());
-        }
+        inner.push(self.inner.to_inner());
         inner
     }
 }

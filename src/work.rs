@@ -1,4 +1,4 @@
-//! Work experience implementation of `ResumeElement` trait  
+//! Work Experience Implementation of `ResumeElement` Trait  
 //! Maily include company, position, simple introduction of job content, etc.  
 //! 
 //! Example:  
@@ -39,5 +39,5 @@ impl ResumeElement for Work {
 pub trait WorkInner: IntoInner {
     fn company(&self) -> String;
     fn position(&self) -> String;
-    fn content(&self) -> Option<String>;
+    fn content(&self) -> Vec<String>;
 }

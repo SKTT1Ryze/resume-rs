@@ -1,4 +1,4 @@
-//! Education experience implementation of `ResumeElement` trait  
+//! Education Experience Implementation of `ResumeElement` Trait  
 //! Maily include undergraduate, master, doctor, etc.  
 //! 
 //! Example:  

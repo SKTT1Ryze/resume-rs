@@ -1,4 +1,4 @@
-//! A crate for generating Latex Resume documents programatically.
+//! A Crate for Generating Latex Resume Documents Programatically.
 //!
 //! This library tries to create simple and useful interface to 
 //! help you writting your resume with `rustlang`.  
@@ -9,6 +9,8 @@
 pub mod info;
 pub mod education;
 pub mod work;
+
+pub mod template;
 
 /// The resume, included `ResumeClass` 
 /// and some object implemented `ResumeElement` trait
@@ -26,6 +28,13 @@ impl Default for Resume {
     }
 }
 
+impl Resume {
+    fn append_element<E>(&mut self, elem: E)
+    where E: ResumeElement + 'static
+    {
+        self.elements.push(Box::new(elem));
+    }
+}
 /// Classification of Resume
 pub enum ResumeClass {
     Programmer,
@@ -55,6 +64,7 @@ pub trait Situation {
     fn country(&self) -> Option<String>;
     fn province(&self) -> Option<String>;
     fn city(&self) -> Option<String>;
+    fn other(&self) -> Option<String>;
 }
 
 pub trait IntoInner {
