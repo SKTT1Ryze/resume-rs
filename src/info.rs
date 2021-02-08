@@ -15,7 +15,7 @@ use crate::{
     IntoInner,
 };
 pub struct PersonalInfo {
-    inner: Box<dyn InfoInner>
+    pub inner: Box<dyn InfoInner>
 }
 
 impl PersonalInfo {

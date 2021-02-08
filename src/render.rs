@@ -7,14 +7,13 @@
 
 extern crate latex;
 
-use latex::{Document, PreambleElement};
-use crate::{
-    education::Education,
-    info::PersonalInfo,
-    template::Template,
-    work::Work
+use latex::{
+    Document,
+    PreambleElement,
+    Element
 };
-use crate::addtolength;
+use crate::{Resume, education::Education, info::PersonalInfo, template::{Template, Typography}, work::Work};
+use crate::{addtolength, ifhaveinfo};
 
 pub struct Render {}
 
@@ -49,7 +48,38 @@ impl Render {
     }
 
     pub fn render_info(doc: &mut Document, info: Box<PersonalInfo>) -> &mut Document {
-        todo!();
+        let minipage = format!(r#"\begin{{minipage}}[c]{{0.05\textwidth}}
+\-\
+\end{{minipage}}"#);
+        doc.push(Element::UserDefined(minipage));
+        let minipage = String::from(r"\begin{minipage}[c]{0.2\textwidth}
+\begin{tikzpicture}
+\clip (0,0) circle (1.75cm);
+\node at (0,-.7) {\includegraphics[width = 9cm]{portrait}}; 
+% if necessary the picture may be moved by changing the at (coordinates)
+% width defines the 'zoom' of the picture
+\end{tikzpicture}
+\hfill\vline\hfill
+\end{minipage}");
+        doc.push(Element::UserDefined(minipage));
+        let name = ifhaveinfo!(info.inner.name());
+        let phone = ifhaveinfo!(info.inner.phone());
+        let email = ifhaveinfo!(info.inner.email());
+        let github_url = ifhaveinfo!(info.inner.github());
+        let mut github_name = String::from(github_url.as_str());
+        assert!(github_name.len() > 8);
+        for _ in 0..8 {
+            github_name.remove(0);
+        }
+        let info = format!(r#"\begin{{minipage}}[c]{{0.4\textwidth}}
+    \textbf{{\Huge \scshape{{{}}}}} \\ \vspace{{1pt}} 
+    % \scshape sets small capital letters, remove if desired
+    \small{{{}}} \\
+    \href{{mailto:you@provider.com}}{{\underline{{{}}}}}\\
+    % Be sure to use a professional *personal* email address
+    \href{{{}}}{{\underline{{{}}}}}
+\end{{minipage}}"#, name, phone, email, github_url, github_name);
+        doc.push(Element::UserDefined(info));
         doc
     }
 
@@ -73,6 +103,17 @@ macro_rules! addtolength {
     };
 }
 
+#[macro_export]
+macro_rules! ifhaveinfo {
+    ($o:expr) => {
+        if let Some(item) = $o {
+            item
+        } else {
+            String::from("")
+        }
+    };
+}
+
 #[test]
 fn addtolength_test() {
     let mut document = Document::default();
@@ -85,4 +126,82 @@ fn addtolength_test() {
 \end{document}
 ")
     );
+}
+
+#[test]
+fn render_typography_test() {
+    struct SimpleTemplate {
+        typography: SimpleTypography,
+        resume: Resume
+    };
+    impl Template for SimpleTemplate {
+        fn typography(&self) -> Box<dyn Typography> {
+            Box::new(self.typography)
+        }
+        fn resume(&self) -> &Resume {
+            &self.resume
+        }
+    }
+    impl SimpleTemplate {
+        pub fn new() -> Self {
+            Self {
+                typography: SimpleTypography {},
+                resume: Resume::default()
+            }
+        }
+    }
+    #[derive(Clone, Copy)]
+    struct SimpleTypography {}
+    impl Typography for SimpleTypography {
+        fn oddsidemargin(&self) -> Option<i32> {
+            Some(-1)
+        }
+        fn evensidemargin(&self) -> Option<i32> {
+            Some(-1)
+        }
+        fn textwidth(&self) -> Option<i32> {
+            Some(2)
+        }
+        fn topmargin(&self) -> Option<i32> {
+            Some(-1)
+        }
+        fn textheight(&self) -> Option<i32> {
+            Some(2)
+        }
+        fn other(&self) -> Option<String> {
+            None
+        }
+    }
+
+    let template = SimpleTemplate::new();
+    let mut document = Document::default();
+    let document = Render::render_typography(&mut document, template);
+    let should_be = format!(r"\documentclass{{article}}
+\addtolength{{\oddsidemargin}}{{-1cm}}
+\addtolength{{\evensidemargin}}{{-1cm}}
+\addtolength{{\textwidth}}{{2cm}}
+\addtolength{{\topmargin}}{{-1cm}}
+\addtolength{{\textheight}}{{2cm}}
+\begin{{document}}
+\end{{document}}
+");
+    assert_eq!(
+        latex::print(&document).unwrap(),
+        should_be
+    );
+}
+
+#[test]
+fn render_info_test() {
+    // TODO
+}
+
+#[test]
+fn render_education_test() {
+    // TODO
+}
+
+#[test]
+fn render_work_test() {
+    // TODO
 }
