@@ -11,6 +11,7 @@ pub mod education;
 pub mod work;
 
 pub mod template;
+pub mod render;
 
 /// The resume, included `ResumeClass` 
 /// and some object implemented `ResumeElement` trait

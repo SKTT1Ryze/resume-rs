@@ -7,8 +7,8 @@ pub mod type1;
 use crate::Resume;
 
 pub trait Template {
-    fn resume(&self) -> &Resume;
     fn typography(&self) -> Box<dyn Typography>;
+    fn resume(&self) -> &Resume;
 }
 
 pub trait Typography {
