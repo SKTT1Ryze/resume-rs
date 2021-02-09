@@ -14,7 +14,7 @@ use latex::{
     Section
 };
 use lazy_static::lazy_static;
-use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{self, Template}, work::{WorkInner}};
+use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{self, Template}, work::{self, WorkInner}};
 use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
 
 lazy_static! {
@@ -26,6 +26,14 @@ lazy_static! {
     static ref TEST_MAJOR: String = String::from("Dragon Slayer");
     static ref TEST_PROVINCE: String = String::from("Hubei");
     static ref TEST_CITY: String = String::from("Wuhan");
+    static ref TEST_COMPANY: String = String::from("RIOT");
+    static ref TEST_POSITION: String = String::from("Game Developer");
+    static ref TEST_CONTENT: Vec<String> = {
+        vec![
+            String::from("Developing LOL in RIOT"),
+            String::from("Game Server Testing"),
+            ]
+    };
 }
 
 pub struct Type1Render {}
@@ -96,14 +104,27 @@ impl Type1Render {
         doc
     }
 
-    fn render_education<'a>(doc: &'a mut Document, edu: &Vec<Box<&'a dyn EduInner>>) -> &'a mut Document {
+    fn render_edu_head(doc: &mut Document) -> &mut Document {
         let mut section = Section::new("Education");
-        for e in edu {
-            section.push(r"\CVSubHeadingListStart
+        section.push(r"\CVSubHeadingListStart
 %    \CVSubheading % Example
 %      {Degree Achieved}{Years of Study}
-%      {Institution of Study}{Where it is located}
-    \CVSubheading");
+%      {Institution of Study}{Where it is located}");
+        doc.push(section);
+        doc
+    }
+
+    fn render_edu_tail(doc: &mut Document) -> &mut Document {
+        let mut section = String::from("");
+        section.push_str(r"\CVSubHeadingListEnd");
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
+    fn render_education<'a>(doc: &'a mut Document, edu: &Vec<Box<&'a dyn EduInner>>) -> &'a mut Document {
+        let mut section = String::new();
+        for e in edu {
+            section.push_str("    \\CVSubheading\n");
             let degree_shcool_major;
             match e.experience() {
                 Degree::Undergraduate(school, major) => {
@@ -127,25 +148,75 @@ impl Type1Render {
                 e.to_inner().situation().province(),
                 e.to_inner().situation().city()
             );
-            section.push(format!(
-                r"        {{{{{} $|$ \emph{{\small{{Major: {}}}}}}}}}{{{}}}",
+            section.push_str(format!(
+                "        {{{{{} $|$ \\emph{{\\small{{Major: {}}}}}}}}}{{{}}}\n",
                 degree_shcool_major.0,
                 degree_shcool_major.2,
                 time.as_str()
             ).as_str());
-            section.push(format!(
-                r"        {{{}}}{{{}}}",
+            section.push_str(format!(
+                "        {{{}}}{{{}}}\n",
                 degree_shcool_major.1,
                 province_city
             ).as_str());
-            section.push(r"\CVSubHeadingListEnd");
         }
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
+    fn render_work_head(doc: &mut Document) -> &mut Document {
+        let mut section = Section::new("Work Experience");
+        section.push(r"\CVSubHeadingListStart
+%    \CVSubheading %Example
+%      {What you did}{When you worked there}
+%      {Who you worked for}{Where they are located}
+%      \CVItemListStart
+%        \CVItem{Why it is important to this employer}
+%      \CVItemListEnd");
         doc.push(section);
         doc
     }
 
-    fn render_work<'a>(doc: &'a mut Document, work: Box<&'a dyn WorkInner>) -> &'a mut Document {
-        todo!();
+    fn render_work_tail(doc: &mut Document) -> &mut Document {
+        let mut section = String::from("");
+        section.push_str(r"\CVSubHeadingListEnd");
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
+    fn render_work<'a>(doc: &'a mut Document, work: &Vec<Box<&'a dyn WorkInner>>) -> &'a mut Document {
+        let mut section = String::from("");
+        for w in work {
+            let company = w.company();
+            let position = w.position();
+            let content = w.content();
+            let year = w.to_inner().time().year();
+            let month = w.to_inner().time().month();
+            let time = ifhavemonthyear!(year, month);
+            let province_city = ifhavecityprovince!(
+                w.to_inner().situation().province(),
+                w.to_inner().situation().city()
+            );
+            let mut cv_items = String::from(r"    \CVItemListStart");
+            for c in content {
+                cv_items.push_str("\n        \\CVItem{");
+                cv_items.push_str(c.as_str());
+                cv_items.push_str("}");
+            }
+            cv_items.push_str("\n    \\CVItemListEnd");
+            section.push_str(format!(
+                r"    \CVSubheading
+    {{{}}}{{{}}}
+    {{{}}}{{{}}}
+{}",
+                position,
+                time,
+                company,
+                province_city,
+                cv_items
+            ).as_str());
+        }
+        doc.push(Element::UserDefined(section));
         doc
     }
 }
@@ -352,13 +423,22 @@ fn type1_render_education_test() {
         (9, 7),
         (&(*TEST_PROVINCE), &(*TEST_CITY))
     );
+    template.undergraduate(
+        &(*TEST_SCHOOL),
+        &(*TEST_MAJOR),
+        (2015, 2019),
+        (9, 7),
+        (&(*TEST_PROVINCE), &(*TEST_CITY))
+    );
     let resume = template.resume();
     let mut doc = Document::default();
+    let doc = Type1Render::render_edu_head(&mut doc);
     for elem in &resume.elements {
         if let Some(edu) = elem.edu_inner() {
-            Type1Render::render_education(&mut doc, &edu);
+            Type1Render::render_education(doc, &edu);
         }
     }
+    Type1Render::render_edu_tail(doc);
     let should_be = format!(r"\documentclass{{article}}
 \begin{{document}}
 \section{{Education}}
@@ -367,14 +447,16 @@ fn type1_render_education_test() {
 %    \CVSubheading % Example
 %      {{Degree Achieved}}{{Years of Study}}
 %      {{Institution of Study}}{{Where it is located}}
+
     \CVSubheading
-
         {{{{Undergraduate $|$ \emph{{\small{{Major: Dragon Slayer}}}}}}}}{{September 2015 -- July 2019}}
+        {{Kassel College}}{{Wuhan, Hubei}}
 
+    \CVSubheading
+        {{{{Undergraduate $|$ \emph{{\small{{Major: Dragon Slayer}}}}}}}}{{September 2015 -- July 2019}}
         {{Kassel College}}{{Wuhan, Hubei}}
 
 \CVSubHeadingListEnd
-
 \end{{document}}
 ");
     assert_eq!(
@@ -385,5 +467,65 @@ fn type1_render_education_test() {
 
 #[test]
 fn type1_render_work_test() {
-    // TODO
+    use crate::template::type1::TemplateType1;
+    use crate::template::Template;
+    let mut template = TemplateType1::new();
+    template.internship(
+        &(*TEST_COMPANY),
+        &(*TEST_POSITION),
+        &(*TEST_CONTENT),
+        (2020, 2025),
+        (1, 1),
+        (&(*TEST_PROVINCE), &(*TEST_CITY))
+    );
+    template.internship(
+        &(*TEST_COMPANY),
+        &(*TEST_POSITION),
+        &(*TEST_CONTENT),
+        (2020, 2025),
+        (1, 1),
+        (&(*TEST_PROVINCE), &(*TEST_CITY))
+    );
+    let resume = template.resume();
+    let mut doc = Document::default();
+    let doc = Type1Render::render_work_head(&mut doc);
+    for elem in &resume.elements {
+        if let Some(works) = elem.work_inner() {
+            Type1Render::render_work(doc, &works);
+        }
+    }
+    Type1Render::render_work_tail(doc);
+    let should_be = format!(r"\documentclass{{article}}
+\begin{{document}}
+\section{{Work Experience}}
+
+\CVSubHeadingListStart
+%    \CVSubheading %Example
+%      {{What you did}}{{When you worked there}}
+%      {{Who you worked for}}{{Where they are located}}
+%      \CVItemListStart
+%        \CVItem{{Why it is important to this employer}}
+%      \CVItemListEnd
+
+    \CVSubheading
+    {{Game Developer}}{{January 2020 -- January 2025}}
+    {{RIOT}}{{Wuhan, Hubei}}
+    \CVItemListStart
+        \CVItem{{Developing LOL in RIOT}}
+        \CVItem{{Game Server Testing}}
+    \CVItemListEnd
+    \CVSubheading
+    {{Game Developer}}{{January 2020 -- January 2025}}
+    {{RIOT}}{{Wuhan, Hubei}}
+    \CVItemListStart
+        \CVItem{{Developing LOL in RIOT}}
+        \CVItem{{Game Server Testing}}
+    \CVItemListEnd
+\CVSubHeadingListEnd
+\end{{document}}
+");
+    assert_eq!(
+        should_be,
+        latex::print(&doc).unwrap()
+    );
 }
