@@ -16,14 +16,14 @@ pub mod render;
 /// The resume, included `ResumeClass` 
 /// and some object implemented `ResumeElement` trait
 pub struct Resume {
-    class: ResumeClass,
+    _class: ResumeClass,
     elements: Vec<Box<dyn ResumeElement>>
 }
 
 impl Default for Resume {
     fn default() -> Self {
         Self {
-            class: ResumeClass::Programmer,
+            _class: ResumeClass::Programmer,
             elements: Vec::new()
         }
     }

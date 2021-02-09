@@ -6,14 +6,22 @@
 //! 
 
 extern crate latex;
-
+extern crate lazy_static;
 use latex::{
     Document,
     PreambleElement,
     Element
 };
-use crate::{Resume, education::Education, info::PersonalInfo, template::{Template, Typography}, work::Work};
+use lazy_static::lazy_static;
+use crate::{education::Education, info::PersonalInfo, template::{Template}, work::Work};
 use crate::{addtolength, ifhaveinfo};
+
+lazy_static! {
+    static ref TEST_NAME: String = String::from("XXX");
+    static ref TEST_PHONE: String = String::from("+86 1234-5678-910");
+    static ref TEST_EMAIL: String = String::from("1234567@89.com");
+    static ref TEST_GITHUB: String = String::from("https://github.com/XXX");
+}
 
 pub struct Render {}
 
@@ -130,6 +138,8 @@ fn addtolength_test() {
 
 #[test]
 fn render_typography_test() {
+    use crate::Resume;
+    use crate::template::Typography;
     struct SimpleTemplate {
         typography: SimpleTypography,
         resume: Resume
@@ -193,7 +203,15 @@ fn render_typography_test() {
 
 #[test]
 fn render_info_test() {
-    // TODO
+    use crate::template::type1::TemplateType1;
+    let mut template = TemplateType1::new();
+    template.personal_info(
+        &(*TEST_NAME),
+        &(*TEST_PHONE),
+        &(*TEST_EMAIL),
+        &(*TEST_GITHUB)
+    );
+    todo!()
 }
 
 #[test]
