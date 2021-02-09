@@ -6,6 +6,10 @@
 //! Imagine that it' s such a cool thing that writting your resume by programming!  
 //! 
 
+use education::EduInner;
+use info::InfoInner;
+use work::WorkInner;
+
 pub mod info;
 pub mod education;
 pub mod work;
@@ -17,7 +21,7 @@ pub mod render;
 /// and some object implemented `ResumeElement` trait
 pub struct Resume {
     _class: ResumeClass,
-    elements: Vec<Box<dyn ResumeElement>>
+    pub elements: Vec<Box<dyn ResumeElement>>
 }
 
 impl Default for Resume {
@@ -45,6 +49,15 @@ pub enum ResumeClass {
 pub trait ResumeElement {
     fn title(&self) -> Option<String>;
     fn inner(&self) -> Vec<Box<dyn Inner>>;
+    fn info_inner(&self) -> Option<Box<&dyn InfoInner>> {
+        None
+    }
+    fn edu_inner(&self) -> Option<Vec<Box<&dyn EduInner>>> {
+        None
+    }
+    fn work_inner(&self) -> Option<Vec<Box<&dyn WorkInner>>> {
+        None
+    }
 }
 
 

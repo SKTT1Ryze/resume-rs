@@ -34,6 +34,11 @@ impl ResumeElement for Work {
         }
         inner
     }
+    fn work_inner(&self) -> Option<Vec<Box<&dyn WorkInner>>> {
+        let work_inners: Vec<Box<&dyn WorkInner>> = self.inners.iter()
+            .map(|e| Box::new(e.as_ref())).collect();
+        Some(work_inners)
+    }
 }
 
 pub trait WorkInner: IntoInner {

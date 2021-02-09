@@ -30,6 +30,11 @@ impl ResumeElement for Education {
         }
         inner
     }
+    fn edu_inner(&self) -> Option<Vec<Box<&dyn EduInner>>> {
+        let edu_inners: Vec<Box<&dyn EduInner>> = self.inners.iter()
+            .map(|e| Box::new(e.as_ref())).collect();
+        Some(edu_inners)
+    }
 }
 
 pub trait EduInner: IntoInner {

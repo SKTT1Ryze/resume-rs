@@ -13,7 +13,7 @@ use latex::{
     Element
 };
 use lazy_static::lazy_static;
-use crate::{education::Education, info::PersonalInfo, template::{Template}, work::Work};
+use crate::{education::Education, info::{InfoInner}, template::{self, Template}, work::Work};
 use crate::{addtolength, ifhaveinfo};
 
 lazy_static! {
@@ -55,25 +55,25 @@ impl Render {
         doc
     }
 
-    pub fn render_info(doc: &mut Document, info: Box<PersonalInfo>) -> &mut Document {
+    pub fn render_info<'a>(doc: &'a mut Document, info: Box<&'a dyn InfoInner>) -> &'a mut Document {
         let minipage = format!(r#"\begin{{minipage}}[c]{{0.05\textwidth}}
 \-\
 \end{{minipage}}"#);
         doc.push(Element::UserDefined(minipage));
         let minipage = String::from(r"\begin{minipage}[c]{0.2\textwidth}
 \begin{tikzpicture}
-\clip (0,0) circle (1.75cm);
-\node at (0,-.7) {\includegraphics[width = 9cm]{portrait}}; 
-% if necessary the picture may be moved by changing the at (coordinates)
-% width defines the 'zoom' of the picture
+    \clip (0,0) circle (1.75cm);
+    \node at (0,-.7) {\includegraphics[width = 9cm]{portrait}}; 
+    % if necessary the picture may be moved by changing the at (coordinates)
+    % width defines the 'zoom' of the picture
 \end{tikzpicture}
 \hfill\vline\hfill
 \end{minipage}");
         doc.push(Element::UserDefined(minipage));
-        let name = ifhaveinfo!(info.inner.name());
-        let phone = ifhaveinfo!(info.inner.phone());
-        let email = ifhaveinfo!(info.inner.email());
-        let github_url = ifhaveinfo!(info.inner.github());
+        let name = ifhaveinfo!(info.name());
+        let phone = ifhaveinfo!(info.phone());
+        let email = ifhaveinfo!(info.email());
+        let github_url = ifhaveinfo!(info.github());
         let mut github_name = String::from(github_url.as_str());
         assert!(github_name.len() > 8);
         for _ in 0..8 {
@@ -204,6 +204,7 @@ fn render_typography_test() {
 #[test]
 fn render_info_test() {
     use crate::template::type1::TemplateType1;
+    use crate::template::Template;
     let mut template = TemplateType1::new();
     template.personal_info(
         &(*TEST_NAME),
@@ -211,7 +212,41 @@ fn render_info_test() {
         &(*TEST_EMAIL),
         &(*TEST_GITHUB)
     );
-    todo!()
+    let resume = template.resume();
+    let mut doc = Document::default();
+    for elem in &resume.elements {
+        if let Some(info) = elem.info_inner() {
+            Render::render_info(&mut doc, info);
+        }
+    }
+    let should_be = format!(r"\documentclass{{article}}
+\begin{{document}}
+\begin{{minipage}}[c]{{0.05\textwidth}}
+\-\
+\end{{minipage}}
+\begin{{minipage}}[c]{{0.2\textwidth}}
+\begin{{tikzpicture}}
+    \clip (0,0) circle (1.75cm);
+    \node at (0,-.7) {{\includegraphics[width = 9cm]{{portrait}}}}; 
+    % if necessary the picture may be moved by changing the at (coordinates)
+    % width defines the 'zoom' of the picture
+\end{{tikzpicture}}
+\hfill\vline\hfill
+\end{{minipage}}
+\begin{{minipage}}[c]{{0.4\textwidth}}
+    \textbf{{\Huge \scshape{{XXX}}}} \\ \vspace{{1pt}} 
+    % \scshape sets small capital letters, remove if desired
+    \small{{+86 1234-5678-910}} \\
+    \href{{mailto:you@provider.com}}{{\underline{{1234567@89.com}}}}\\
+    % Be sure to use a professional *personal* email address
+    \href{{https://github.com/XXX}}{{\underline{{github.com/XXX}}}}
+\end{{minipage}}
+\end{{document}}
+");
+    assert_eq!(
+        should_be,
+        latex::print(&doc).unwrap()
+    );
 }
 
 #[test]

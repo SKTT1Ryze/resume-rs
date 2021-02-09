@@ -35,6 +35,9 @@ impl ResumeElement for PersonalInfo {
         inner.push(self.inner.to_inner());
         inner
     }
+    fn info_inner(&self) -> Option<Box<&dyn InfoInner>> {
+        Some(Box::new(self.inner.as_ref()))
+    }
 }
 
 pub trait InfoInner: IntoInner {
@@ -44,5 +47,3 @@ pub trait InfoInner: IntoInner {
     fn github(&self) -> Option<String>;
     fn other(&self) -> Option<(String, String)>;
 }
-
-
