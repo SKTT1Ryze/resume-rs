@@ -7,12 +7,7 @@
 
 extern crate latex;
 extern crate lazy_static;
-use latex::{
-    Document,
-    PreambleElement,
-    Element,
-    Section
-};
+use latex::{Document, Element, Preamble, PreambleElement, Section};
 use lazy_static::lazy_static;
 use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{self, Template}, work::{self, WorkInner}};
 use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
@@ -43,7 +38,155 @@ impl Type1Render {
         Self {}
     }
 
-    fn render_typography(doc: &mut Document, template: impl Template) -> &mut Document{
+    pub fn render<S>(
+        typography: (
+            i32, // 0. oddsidemargin
+            i32, // 1. evensidemargin
+            i32, // 2. textwidth
+            i32, // 3. topmargin
+            i32 // 4. textheight
+        ),
+        name: &'static S,
+        phone: &'static S,
+        email: &'static S,
+        github: &'static S,
+        education: &'static Vec<(
+            S, // 0. school
+            S, // 1. major
+            (u32, u32), // 2. year
+            (u8, u8), // 3. month
+            (S, S) // 4. situation
+        )>,
+        work: &'static Vec<(
+            S, // 0. company
+            S, // 1. position,
+            Vec<S>, // 2. content
+            (u32, u32), // 3. year
+            (u8, u8), // 4. month
+            (S, S) // 5. situation
+        )>
+    ) -> Document
+    where S: AsRef<str>
+    {
+        use crate::template::type1::TemplateType1;
+        use crate::template::Template;
+        let mut doc = Document::default();
+        let mut template = TemplateType1::new();
+        doc.preamble.use_package("latexsym");
+        doc.preamble.use_package("titlesec");
+        doc.preamble.use_package("marvosym");
+        doc.preamble.use_package("verbatim");
+        doc.preamble.use_package("enumitem");
+        doc.preamble.use_package("tabularx");
+        doc.preamble.use_package("tikz");
+        doc.preamble.use_package("palatino");
+        doc.preamble.push(PreambleElement::UsePackage{
+            package: String::from("fullpage"),
+            argument: Some(String::from("empty"))
+        });
+        doc.preamble.push(PreambleElement::UsePackage{
+            package: String::from("color"),
+            argument: Some(String::from("usenames,dvipsnames"))
+        });
+        doc.preamble.push(PreambleElement::UsePackage{
+            package: String::from("hyperref"),
+            argument: Some(String::from("hidelinks"))
+        });
+        doc.preamble.push(PreambleElement::UsePackage{
+            package: String::from("babel"),
+            argument: Some(String::from("english"))
+        });
+        Self::render_typography(&mut doc, &template);
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\urlstyle{same}")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\raggedbottom")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\raggedright")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\setlength{\tabcolsep}{0cm}")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\titleformat{\section}{
+\vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\pdfgentounicode=1")
+        ));
+        doc.preamble.new_command("CVItem", 1, r"
+\item\small{
+    {#1 \vspace{-2pt}}
+    }");
+        doc.preamble.new_command("CVSubheading", 4, r"
+\vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+        \textbf{#1} & #2 \\
+        \small#3 & \small #4 \\
+    \end{tabular*}\vspace{-7pt}");
+        doc.preamble.new_command("CVSubSubheading", 2, r"
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \text{\small#1} & \text{\small #2} \\
+    \end{tabular*}\vspace{-7pt}");
+        doc.preamble.new_command("CVSubItem", 1, r"\CVItem{#1}\vspace{-4pt}");
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\newcommand{\CVSubHeadingListStart}{\begin{itemize}[leftmargin=0.5cm, label={}]}")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\newcommand{\CVSubHeadingListEnd}{\end{itemize}}")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\newcommand{\CVItemListStart}{\begin{itemize}}")
+        ));
+        doc.preamble.push(PreambleElement::UserDefined(
+            String::from(r"\newcommand{\CVItemListEnd}{\end{itemize}\vspace{-5pt}}")
+        ));
+        template.personal_info(
+            name,
+            phone,
+            email,
+            github
+        );
+        for d in education {
+            template.undergraduate(
+                &d.0, &d.1, d.2, d.3, (&d.4.0, &d.4.1)
+            );
+        }
+        for d in work {
+            template.fulltime_work(
+                &d.0, &d.1, &d.2, d.3, d.4, (&d.5.0, &d.5.1)
+            );
+        }
+        for elem in &template.resume().elements {
+            if let Some(info) = elem.info_inner() {
+                Type1Render::render_info(&mut doc, info);
+            }
+        }
+        Self::render_edu_head(&mut doc);
+        for elem in &template.resume().elements {
+            if let Some(edu) = elem.edu_inner() {
+                Type1Render::render_education(&mut doc, &edu);
+            }
+        }
+        Self::render_edu_tail(&mut doc);
+        Self::render_work_head(&mut doc);
+        for elem in &template.resume().elements {
+            if let Some(work) = elem.work_inner() {
+                Type1Render::render_work(&mut doc, &work);
+            }
+        }
+        Self::render_work_tail(&mut doc);
+        doc
+    }
+
+    pub fn render_typography<'a>(doc: &'a mut Document, template: &'a dyn Template) -> &'a mut Document{
         let typography = template.typography();
         if let Some(x) = typography.oddsidemargin() {
             addtolength!("oddsidemargin", x, doc);
@@ -68,7 +211,7 @@ impl Type1Render {
         doc
     }
 
-    fn render_info<'a>(doc: &'a mut Document, info: Box<&'a dyn InfoInner>) -> &'a mut Document {
+    pub fn render_info<'a>(doc: &'a mut Document, info: Box<&'a dyn InfoInner>) -> &'a mut Document {
         let minipage = format!(r#"\begin{{minipage}}[c]{{0.05\textwidth}}
 \-\
 \end{{minipage}}"#);
@@ -104,7 +247,7 @@ impl Type1Render {
         doc
     }
 
-    fn render_edu_head(doc: &mut Document) -> &mut Document {
+    pub fn render_edu_head(doc: &mut Document) -> &mut Document {
         let mut section = Section::new("Education");
         section.push(r"\CVSubHeadingListStart
 %    \CVSubheading % Example
@@ -114,14 +257,14 @@ impl Type1Render {
         doc
     }
 
-    fn render_edu_tail(doc: &mut Document) -> &mut Document {
+    pub fn render_edu_tail(doc: &mut Document) -> &mut Document {
         let mut section = String::from("");
         section.push_str(r"\CVSubHeadingListEnd");
         doc.push(Element::UserDefined(section));
         doc
     }
 
-    fn render_education<'a>(doc: &'a mut Document, edu: &Vec<Box<&'a dyn EduInner>>) -> &'a mut Document {
+    pub fn render_education<'a>(doc: &'a mut Document, edu: &Vec<Box<&'a dyn EduInner>>) -> &'a mut Document {
         let mut section = String::new();
         for e in edu {
             section.push_str("    \\CVSubheading\n");
@@ -164,7 +307,7 @@ impl Type1Render {
         doc
     }
 
-    fn render_work_head(doc: &mut Document) -> &mut Document {
+    pub fn render_work_head(doc: &mut Document) -> &mut Document {
         let mut section = Section::new("Work Experience");
         section.push(r"\CVSubHeadingListStart
 %    \CVSubheading %Example
@@ -177,14 +320,14 @@ impl Type1Render {
         doc
     }
 
-    fn render_work_tail(doc: &mut Document) -> &mut Document {
+    pub fn render_work_tail(doc: &mut Document) -> &mut Document {
         let mut section = String::from("");
         section.push_str(r"\CVSubHeadingListEnd");
         doc.push(Element::UserDefined(section));
         doc
     }
 
-    fn render_work<'a>(doc: &'a mut Document, work: &Vec<Box<&'a dyn WorkInner>>) -> &'a mut Document {
+    pub fn render_work<'a>(doc: &'a mut Document, work: &Vec<Box<&'a dyn WorkInner>>) -> &'a mut Document {
         let mut section = String::from("");
         for w in work {
             let company = w.company();
@@ -347,7 +490,7 @@ fn type1_render_typography_test() {
 
     let template = SimpleTemplate::new();
     let mut document = Document::default();
-    let document = Type1Render::render_typography(&mut document, template);
+    let document = Type1Render::render_typography(&mut document, &template);
     let should_be = format!(r"\documentclass{{article}}
 \addtolength{{\oddsidemargin}}{{-1cm}}
 \addtolength{{\evensidemargin}}{{-1cm}}
