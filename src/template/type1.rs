@@ -247,8 +247,8 @@ impl<'a> IntoInner for Type1Undergraduate<'a> {
 }
 
 impl<'a> EduInner for Type1Undergraduate<'a> {
-    fn experience(&self) -> Vec<Degree> {
-        vec![Degree::Undergraduate(String::from(self.school), String::from(self.major))]
+    fn experience(&self) -> Degree {
+        Degree::Undergraduate(String::from(self.school), String::from(self.major))
     }
 }
 

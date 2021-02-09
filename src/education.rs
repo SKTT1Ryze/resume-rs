@@ -38,7 +38,7 @@ impl ResumeElement for Education {
 }
 
 pub trait EduInner: IntoInner {
-    fn experience(&self) -> Vec<Degree>;
+    fn experience(&self) -> Degree;
 }
 
 pub enum Degree {

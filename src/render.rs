@@ -10,27 +10,32 @@ extern crate lazy_static;
 use latex::{
     Document,
     PreambleElement,
-    Element
+    Element,
+    Section
 };
 use lazy_static::lazy_static;
-use crate::{education::Education, info::{InfoInner}, template::{self, Template}, work::Work};
-use crate::{addtolength, ifhaveinfo};
+use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{self, Template}, work::{WorkInner}};
+use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
 
 lazy_static! {
     static ref TEST_NAME: String = String::from("XXX");
     static ref TEST_PHONE: String = String::from("+86 1234-5678-910");
     static ref TEST_EMAIL: String = String::from("1234567@89.com");
     static ref TEST_GITHUB: String = String::from("https://github.com/XXX");
+    static ref TEST_SCHOOL: String = String::from("Kassel College");
+    static ref TEST_MAJOR: String = String::from("Dragon Slayer");
+    static ref TEST_PROVINCE: String = String::from("Hubei");
+    static ref TEST_CITY: String = String::from("Wuhan");
 }
 
-pub struct Render {}
+pub struct Type1Render {}
 
-impl Render {
+impl Type1Render {
     pub fn new() -> Self {
         Self {}
     }
 
-    pub fn render_typography(doc: &mut Document, template: impl Template) -> &mut Document{
+    fn render_typography(doc: &mut Document, template: impl Template) -> &mut Document{
         let typography = template.typography();
         if let Some(x) = typography.oddsidemargin() {
             addtolength!("oddsidemargin", x, doc);
@@ -55,7 +60,7 @@ impl Render {
         doc
     }
 
-    pub fn render_info<'a>(doc: &'a mut Document, info: Box<&'a dyn InfoInner>) -> &'a mut Document {
+    fn render_info<'a>(doc: &'a mut Document, info: Box<&'a dyn InfoInner>) -> &'a mut Document {
         let minipage = format!(r#"\begin{{minipage}}[c]{{0.05\textwidth}}
 \-\
 \end{{minipage}}"#);
@@ -91,12 +96,55 @@ impl Render {
         doc
     }
 
-    pub fn render_education(doc: &mut Document, edu: Box<Education>) -> &mut Document {
-        todo!();
+    fn render_education<'a>(doc: &'a mut Document, edu: &Vec<Box<&'a dyn EduInner>>) -> &'a mut Document {
+        let mut section = Section::new("Education");
+        for e in edu {
+            section.push(r"\CVSubHeadingListStart
+%    \CVSubheading % Example
+%      {Degree Achieved}{Years of Study}
+%      {Institution of Study}{Where it is located}
+    \CVSubheading");
+            let degree_shcool_major;
+            match e.experience() {
+                Degree::Undergraduate(school, major) => {
+                    degree_shcool_major = ("Undergraduate", school, major);
+                    
+                },
+                Degree::Master(school, major) => {
+                    degree_shcool_major = ("Master", school, major);
+                },
+                Degree::Doctor(school, major) => {
+                    degree_shcool_major = ("Doctor", school, major);
+                },
+                Degree::Other(_message) => {
+                    todo!()    
+                }
+            }
+            let year = e.to_inner().time().year();
+            let month = e.to_inner().time().month();
+            let time = ifhavemonthyear!(year, month);
+            let province_city = ifhavecityprovince!(
+                e.to_inner().situation().province(),
+                e.to_inner().situation().city()
+            );
+            section.push(format!(
+                r"        {{{{{} $|$ \emph{{\small{{Major: {}}}}}}}}}{{{}}}",
+                degree_shcool_major.0,
+                degree_shcool_major.2,
+                time.as_str()
+            ).as_str());
+            section.push(format!(
+                r"        {{{}}}{{{}}}",
+                degree_shcool_major.1,
+                province_city
+            ).as_str());
+            section.push(r"\CVSubHeadingListEnd");
+        }
+        doc.push(section);
         doc
     }
 
-    pub fn render_work(doc: &mut Document, work: Box<Work>) -> &mut Document {
+    fn render_work<'a>(doc: &'a mut Document, work: Box<&'a dyn WorkInner>) -> &'a mut Document {
         todo!();
         doc
     }
@@ -122,6 +170,49 @@ macro_rules! ifhaveinfo {
     };
 }
 
+#[macro_export]
+macro_rules! ifhavemonthyear {
+    ($y:expr, $m:expr) => {
+        if let (Some(year), Some(month)) = ($y, $m) {
+            format!("{} {} -- {} {}", month!(month.0), year.0, month!(month.1), year.1)
+        } else {
+            String::from("")
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! ifhavecityprovince {
+    ($p:expr, $c:expr) => {
+        if let (Some(province), Some(city)) = ($p, $c) {
+            format!("{}, {}", city, province)
+        } else {
+            String::from("")
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! month {
+    ($m:expr) => {
+        match $m {
+            1 => "January",
+            2 => "February",
+            3 => "March",
+            4 => "April",
+            5 => "May",
+            6 => "June",
+            7 => "July",
+            8 => "August",
+            9 => "September",
+            10 => "October",
+            11 => "November",
+            12 => "December",
+            _ => panic!("Inexistent Month!")
+        }        
+    };
+}
+
 #[test]
 fn addtolength_test() {
     let mut document = Document::default();
@@ -137,7 +228,7 @@ fn addtolength_test() {
 }
 
 #[test]
-fn render_typography_test() {
+fn type1_render_typography_test() {
     use crate::Resume;
     use crate::template::Typography;
     struct SimpleTemplate {
@@ -185,7 +276,7 @@ fn render_typography_test() {
 
     let template = SimpleTemplate::new();
     let mut document = Document::default();
-    let document = Render::render_typography(&mut document, template);
+    let document = Type1Render::render_typography(&mut document, template);
     let should_be = format!(r"\documentclass{{article}}
 \addtolength{{\oddsidemargin}}{{-1cm}}
 \addtolength{{\evensidemargin}}{{-1cm}}
@@ -202,7 +293,7 @@ fn render_typography_test() {
 }
 
 #[test]
-fn render_info_test() {
+fn type1_render_info_test() {
     use crate::template::type1::TemplateType1;
     use crate::template::Template;
     let mut template = TemplateType1::new();
@@ -216,7 +307,7 @@ fn render_info_test() {
     let mut doc = Document::default();
     for elem in &resume.elements {
         if let Some(info) = elem.info_inner() {
-            Render::render_info(&mut doc, info);
+            Type1Render::render_info(&mut doc, info);
         }
     }
     let should_be = format!(r"\documentclass{{article}}
@@ -250,11 +341,49 @@ fn render_info_test() {
 }
 
 #[test]
-fn render_education_test() {
-    // TODO
+fn type1_render_education_test() {
+    use crate::template::type1::TemplateType1;
+    use crate::template::Template;
+    let mut template = TemplateType1::new();
+    template.undergraduate(
+        &(*TEST_SCHOOL),
+        &(*TEST_MAJOR),
+        (2015, 2019),
+        (9, 7),
+        (&(*TEST_PROVINCE), &(*TEST_CITY))
+    );
+    let resume = template.resume();
+    let mut doc = Document::default();
+    for elem in &resume.elements {
+        if let Some(edu) = elem.edu_inner() {
+            Type1Render::render_education(&mut doc, &edu);
+        }
+    }
+    let should_be = format!(r"\documentclass{{article}}
+\begin{{document}}
+\section{{Education}}
+
+\CVSubHeadingListStart
+%    \CVSubheading % Example
+%      {{Degree Achieved}}{{Years of Study}}
+%      {{Institution of Study}}{{Where it is located}}
+    \CVSubheading
+
+        {{{{Undergraduate $|$ \emph{{\small{{Major: Dragon Slayer}}}}}}}}{{September 2015 -- July 2019}}
+
+        {{Kassel College}}{{Wuhan, Hubei}}
+
+\CVSubHeadingListEnd
+
+\end{{document}}
+");
+    assert_eq!(
+        should_be,
+        latex::print(&doc).unwrap()
+    );
 }
 
 #[test]
-fn render_work_test() {
+fn type1_render_work_test() {
     // TODO
 }
