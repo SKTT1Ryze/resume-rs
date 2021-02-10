@@ -1,6 +1,6 @@
 # resume-rs
-Resume Template Written with Rust
 [English](./README_en.md) [中文](./README.md)  
+Resume Template Written with Rust  
 
 ## What it is
 It sounds cool that we write our resume by programming!  
@@ -20,7 +20,7 @@ lazy_static = "1.4.0"
 latex = { git = "https://github.com/SKTT1Ryze/latex-rs" }
 ```
 
-Then See [main.rs](./example/src/main.rs).  
+Then see [main.rs](./example/src/main.rs).  
 
 ## License
 [MIT License](./LICENSE)  
