@@ -14,6 +14,7 @@ use crate::{
     proj::ProjInner,
     template::Template,
     work::WorkInner,
+    honor::HonorInner,
 };
 use latex::{Document, Element, PreambleElement, Section};
 use lazy_static::lazy_static;
@@ -38,6 +39,8 @@ lazy_static! {
     static ref TEST_PROJ: String = String::from("RISC-V Processor With Rustlang");
     static ref TEST_GROUP: String = String::from("RISC-V Foundation");
     static ref TEST_LANG: String = String::from("Rust");
+    static ref TEST_HONOR: String = String::from("S20 Champion");
+    static ref TEST_DESCRIPTION: String = String::from("Rank One in the 20th LOL World Champions");
 }
 
 pub struct Type1Render {}
@@ -460,6 +463,65 @@ impl Type1Render {
         doc.push(Element::UserDefined(section));
         doc
     }
+
+    pub fn render_honor_head(doc: &mut Document) -> &mut Document {
+        let mut section = Section::new("Honors and Awards");
+        section.push(
+            r"\CVSubHeadingListStart
+%   \CVSubheading
+%      {What}{When}
+%      {Short Description}{}",
+        );
+        doc.push(section);
+        doc
+    }
+
+    pub fn render_honor_tail(doc: &mut Document) -> &mut Document {
+        let mut section = String::from("");
+        section.push_str(r"\CVSubHeadingListEnd");
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
+    pub fn render_honor<'a>(
+        doc: &'a mut Document,
+        honors: &Vec<Box<&'a dyn HonorInner>>,
+    ) -> &'a mut Document {
+        let mut section = String::from("");
+        for h in honors {
+            let honor_name = h.honor();
+            let description = h.description();
+            let time = h.time();
+            let year = time.0;
+            let month = match time.1 {
+                1 => "January",
+                2 => "February",
+                3 => "March",
+                4 => "April",
+                5 => "May",
+                6 => "June",
+                7 => "July",
+                8 => "August",
+                9 => "September",
+                10 => "October",
+                11 => "November",
+                12 => "December",
+                _ => panic!("Inexistent Month!"),
+            };
+            section.push_str("    \\CVSubheading");
+            section.push_str(
+                format!(
+                    r"
+    {{{}}}{{{} {}}}
+    {{{}}}{{}}",
+                    honor_name, month, year, description
+                )
+                .as_str(),
+            );
+        }
+        doc.push(Element::UserDefined(section));
+        doc
+    }
 }
 
 #[macro_export]
@@ -819,6 +881,45 @@ fn type1_render_proj_test() {
     \CVSubheading
     {{{{RISC-V Processor With Rustlang}} $|$ \emph{{\small{{Rust}}}}}}{{March 2030 -- March 2032}}
     {{RISC-V Foundation}}{{}}
+\CVSubHeadingListEnd
+\end{{document}}
+"
+    );
+    assert_eq!(should_be, latex::print(&doc).unwrap());
+}
+
+#[test]
+fn type1_render_honor_test() {
+    use crate::template::type1::TemplateType1;
+    use crate::template::Template;
+    let mut template = TemplateType1::new();
+    template.honor(
+        &(*TEST_HONOR),
+        &(*TEST_DESCRIPTION),
+        (2030, 10)
+    );
+    let resume = template.resume();
+    let mut doc = Document::default();
+    let doc = Type1Render::render_honor_head(&mut doc);
+    for elem in &resume.elements {
+        if let Some(honors) = elem.honor_inner() {
+            Type1Render::render_honor(doc, &honors);
+        }
+    }
+    Type1Render::render_honor_tail(doc);
+    let should_be = format!(
+        r"\documentclass{{article}}
+\begin{{document}}
+\section{{Honors and Awards}}
+
+\CVSubHeadingListStart
+%   \CVSubheading
+%      {{What}}{{When}}
+%      {{Short Description}}{{}}
+
+    \CVSubheading
+    {{S20 Champion}}{{October 2030}}
+    {{Rank One in the 20th LOL World Champions}}{{}}
 \CVSubHeadingListEnd
 \end{{document}}
 "
