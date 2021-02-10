@@ -43,5 +43,5 @@ impl ResumeElement for Skill {
 }
 
 pub trait SkillInner: IntoInner {
-    fn items(&self) -> Vec<(String, Vec<String>)>;
+    fn items(&self) -> (String, Vec<String>);
 }

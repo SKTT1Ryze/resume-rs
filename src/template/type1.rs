@@ -202,18 +202,14 @@ impl TemplateType1 {
 
     pub fn skill<S>(
         &mut self,
-        items: &'static Vec<(S, Vec<S>)>
+        items: &'static (S, Vec<S>)
     ) -> &mut Self
     where
         S: AsRef<str>,
     {
-        let mut i = Vec::new();
-        for item in items {
-            let v: Vec<&str> = item.1.iter().map(|s| s.as_ref()).collect();
-            i.push((item.0.as_ref(), v));
-        }
+        let v: Vec<&str> = items.1.iter().map(|s| s.as_ref()).collect();
         let type1_skill_inner = Type1SkillInner {
-            item: i,
+            item: (items.0.as_ref(), v),
             time_situation: Type1SkillTimeSituation::default()
         };
         let mut type1_skill = Skill::default();
@@ -559,7 +555,7 @@ impl Situation for Type1HonorSituation {}
 
 
 pub struct Type1SkillInner<'a> {
-    item: Vec<(&'a str, Vec<&'a str>)>,
+    item: (&'a str, Vec<&'a str>),
     time_situation: Type1SkillTimeSituation,
 }
 
@@ -570,13 +566,12 @@ impl<'a> IntoInner for Type1SkillInner<'a> {
 }
 
 impl<'a> SkillInner for Type1SkillInner<'a> {
-    fn items(&self) -> Vec<(String, Vec<String>)> {
-        let mut items = Vec::new();
-        for i in &self.item {
-            let v: Vec<String> = i.1.iter().map(|s| String::from(*s)).collect();
-            items.push((String::from(i.0), v));
-        }
-        items
+    fn items(&self) -> (String, Vec<String>) {
+        let v: Vec<String> = self.item.1.iter().map(|s| String::from(*s)).collect();
+        (
+            String::from(self.item.0),
+            v
+        )
     }
 }
 

@@ -7,7 +7,7 @@
 
 extern crate latex;
 extern crate lazy_static;
-use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month};
+use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month, skill::{self, SkillInner}};
 use crate::{
     education::{Degree, EduInner},
     honor::HonorInner,
@@ -41,6 +41,8 @@ lazy_static! {
     static ref TEST_LANG: String = String::from("Rust");
     static ref TEST_HONOR: String = String::from("S20 Champion");
     static ref TEST_DESCRIPTION: String = String::from("Rank One in the 20th LOL World Champions");
+    static ref TEST_ITEM: (String, Vec<String>) =
+        (String::from("Languages"), vec![String::from("Chinese"), String::from("English"), String::from("Japanese")]);
 }
 
 pub struct Type1Render {}
@@ -537,6 +539,47 @@ impl Type1Render {
         doc.push(Element::UserDefined(section));
         doc
     }
+
+    pub fn render_skill_head(doc: &mut Document) -> &mut Document {
+        let mut section = Section::new("Skills");
+        section.push(
+            r"\begin{itemize}[leftmargin=0.5cm, label={}]
+    \small{\item{",
+        );
+        doc.push(section);
+        doc
+    }
+
+    pub fn render_skill_tail(doc: &mut Document) -> &mut Document {
+        let mut section = String::from("");
+        section.push_str(r"    }}
+\end{itemize}");
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
+    pub fn render_skill<'a>(
+        doc: &'a mut Document,
+        skills: &Vec<Box<&'a dyn SkillInner>>,
+    ) -> &'a mut Document {
+        let mut section = String::new();
+        for s in skills {
+            let item = s.items();
+            let k = item.0;
+            let mut v = String::new();
+            for i in item.1 {
+                v.push_str(i.as_str());
+                v.push_str(" ");
+            }
+            section.push_str(format!(
+                "    \\textbf{{{}}}{{: {}}} \\\\",
+                k,
+                v
+            ).as_str());
+        }
+        doc.push(Element::UserDefined(section));
+        doc
+    }
 }
 
 #[macro_export]
@@ -909,6 +952,7 @@ fn type1_render_honor_test() {
     use crate::template::Template;
     let mut template = TemplateType1::new();
     template.honor(&(*TEST_HONOR), &(*TEST_DESCRIPTION), (2030, 10));
+    template.honor(&(*TEST_HONOR), &(*TEST_DESCRIPTION), (2030, 10));
     let resume = template.resume();
     let mut doc = Document::default();
     let doc = Type1Render::render_honor_head(&mut doc);
@@ -931,7 +975,44 @@ fn type1_render_honor_test() {
     \CVSubheading
     {{S20 Champion}}{{October 2030}}
     {{Rank One in the 20th LOL World Champions}}{{}}
+    \CVSubheading
+    {{S20 Champion}}{{October 2030}}
+    {{Rank One in the 20th LOL World Champions}}{{}}
 \CVSubHeadingListEnd
+\end{{document}}
+"
+    );
+    assert_eq!(should_be, latex::print(&doc).unwrap());
+}
+
+#[test]
+fn type1_render_skill_test() {
+    use crate::template::type1::TemplateType1;
+    use crate::template::Template;
+    let mut template = TemplateType1::new();
+    template.skill(&(*TEST_ITEM));
+    template.skill(&(*TEST_ITEM));
+    let resume = template.resume();
+    let mut doc = Document::default();
+    let doc = Type1Render::render_skill_head(&mut doc);
+    for elem in &resume.elements {
+        if let Some(skill) = elem.skill_inner() {
+            Type1Render::render_skill(doc, &skill);
+        }
+    }
+    Type1Render::render_skill_tail(doc);
+    let should_be = format!(
+        r"\documentclass{{article}}
+\begin{{document}}
+\section{{Skills}}
+
+\begin{{itemize}}[leftmargin=0.5cm, label={{}}]
+    \small{{\item{{
+
+    \textbf{{Languages}}{{: Chinese English Japanese }} \\
+    \textbf{{Languages}}{{: Chinese English Japanese }} \\
+    }}}}
+\end{{itemize}}
 \end{{document}}
 "
     );
