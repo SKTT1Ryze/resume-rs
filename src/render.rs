@@ -77,6 +77,11 @@ impl Type1Render {
             (u32, u32), // 3. year
             (u8, u8),   // 4. month
         )>,
+        honor: &'static Vec<(
+            S,          // 0. honor name
+            S,          // 1. honor description
+            (u32, u8)   // 2. honor time (year, month)
+        )>
     ) -> Document
     where
         S: AsRef<str>,
@@ -181,6 +186,9 @@ impl Type1Render {
         for d in project {
             template.project(&d.0, &d.1, d.2.as_ref(), (d.3 .0, d.3 .1), (d.4 .0, d.4 .1));
         }
+        for d in honor {
+            template.honor(&d.0, &d.1, (d.2.0, d.2.1));
+        }
         for elem in &template.resume().elements {
             if let Some(info) = elem.info_inner() {
                 Type1Render::render_info(&mut doc, info);
@@ -207,6 +215,13 @@ impl Type1Render {
             }
         }
         Self::render_proj_tail(&mut doc);
+        Self::render_honor_head(&mut doc);
+        for elem in &template.resume().elements {
+            if let Some(honor) = elem.honor_inner() {
+                Self::render_honor(&mut doc, &honor);
+            }
+        }
+        Self::render_honor_tail(&mut doc);
         doc
     }
 
