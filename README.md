@@ -4,10 +4,10 @@ Resume Template Written with Rust
 
 ## What it is
 It sounds cool that we write our resume by programming!  
-Most of the time we can use some `latex` templates to write beautiful resume and it's very fast.  
-Sometimes we want to custom our templates, but don't want to learn `latex` syntax, then this crate will help.  
-You can generate your resume in `latex` format by writting `Rust` code.  
-If you want to render the `latex` document as `pdf`, I recommend [overleaf](https://cn.overleaf.com/).  
+Most of the time we can use some `Latex` templates to write beautiful resume and it's very fast.  
+Sometimes we want to custom our templates, but don't want to learn `Latex` syntax, then this crate will help.  
+You can generate your resume in `Latex` format by writting `Rust` code.  
+If you want to render the `Latex` document as `pdf`, I recommend [overleaf](https://cn.overleaf.com/).  
 However, there's a advance directive that I write this crate mainly for `Rust programming practice`.  
 So, don't make it seriously.(hhh)  
 
