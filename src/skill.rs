@@ -4,19 +4,19 @@
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
 use crate::{Inner, IntoInner, ResumeElement};
 
 #[derive(Default)]
 pub struct Skill {
-    inners: Vec<Box<dyn SkillInner>>
+    inners: Vec<Box<dyn SkillInner>>,
 }
 
 impl Skill {
     pub fn append_inner<I>(&mut self, inner: I)
     where
-        I: SkillInner + 'static
+        I: SkillInner + 'static,
     {
         self.inners.push(Box::new(inner));
     }

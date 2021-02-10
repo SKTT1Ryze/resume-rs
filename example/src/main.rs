@@ -88,10 +88,16 @@ lazy_static! {
     ];
     static ref SKILL: Vec<(String, Vec<String>)> = vec![
         (
-            String::from("Languages"), vec![String::from("Chinese"), String::from("English"), String::from("Japanese")]
+            String::from("Languages"),
+            vec![
+                String::from("Chinese"),
+                String::from("English"),
+                String::from("Japanese")
+            ]
         ),
         (
-            String::from("Programming"), vec![String::from("Rust"), String::from("Chisel")]
+            String::from("Programming"),
+            vec![String::from("Rust"), String::from("Chisel")]
         )
     ];
 }
@@ -106,7 +112,7 @@ fn main() {
         &(*WORK),
         &(*PROJECT),
         &(*HONOR),
-        &(*SKILL)
+        &(*SKILL),
     );
     println!("{}", latex::print(&latex_doc).unwrap());
 }

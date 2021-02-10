@@ -9,8 +9,8 @@ use education::{Degree, EduInner, Education};
 use honor::Honor;
 use info::{InfoInner, PersonalInfo};
 use proj::Project;
-use work::{Work, WorkClass, WorkInner};
 use skill::{Skill, SkillInner};
+use work::{Work, WorkClass, WorkInner};
 
 use super::{Template, Typography};
 use crate::*;
@@ -200,17 +200,14 @@ impl TemplateType1 {
         self
     }
 
-    pub fn skill<S>(
-        &mut self,
-        items: &'static (S, Vec<S>)
-    ) -> &mut Self
+    pub fn skill<S>(&mut self, items: &'static (S, Vec<S>)) -> &mut Self
     where
         S: AsRef<str>,
     {
         let v: Vec<&str> = items.1.iter().map(|s| s.as_ref()).collect();
         let type1_skill_inner = Type1SkillInner {
             item: (items.0.as_ref(), v),
-            time_situation: Type1SkillTimeSituation::default()
+            time_situation: Type1SkillTimeSituation::default(),
         };
         let mut type1_skill = Skill::default();
         type1_skill.append_inner(type1_skill_inner);
@@ -553,7 +550,6 @@ impl Time for Type1HonorTime {}
 pub struct Type1HonorSituation {}
 impl Situation for Type1HonorSituation {}
 
-
 pub struct Type1SkillInner<'a> {
     item: (&'a str, Vec<&'a str>),
     time_situation: Type1SkillTimeSituation,
@@ -568,10 +564,7 @@ impl<'a> IntoInner for Type1SkillInner<'a> {
 impl<'a> SkillInner for Type1SkillInner<'a> {
     fn items(&self) -> (String, Vec<String>) {
         let v: Vec<String> = self.item.1.iter().map(|s| String::from(*s)).collect();
-        (
-            String::from(self.item.0),
-            v
-        )
+        (String::from(self.item.0), v)
     }
 }
 

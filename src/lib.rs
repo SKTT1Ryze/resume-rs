@@ -10,17 +10,17 @@ use education::EduInner;
 use honor::HonorInner;
 use info::InfoInner;
 use proj::ProjInner;
-use work::WorkInner;
 use skill::SkillInner;
+use work::WorkInner;
 
 pub mod education;
 pub mod honor;
 pub mod info;
 pub mod proj;
 pub mod render;
+pub mod skill;
 pub mod template;
 pub mod work;
-pub mod skill;
 
 /// The resume, included `ResumeClass`
 /// and some object implemented `ResumeElement` trait

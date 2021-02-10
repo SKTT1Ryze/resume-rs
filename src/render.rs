@@ -7,7 +7,11 @@
 
 extern crate latex;
 extern crate lazy_static;
-use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month, skill::{self, SkillInner}, template};
+use crate::{
+    addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month,
+    skill::{self, SkillInner},
+    template,
+};
 use crate::{
     education::{Degree, EduInner},
     honor::HonorInner,
@@ -41,8 +45,14 @@ lazy_static! {
     static ref TEST_LANG: String = String::from("Rust");
     static ref TEST_HONOR: String = String::from("S20 Champion");
     static ref TEST_DESCRIPTION: String = String::from("Rank One in the 20th LOL World Champions");
-    static ref TEST_ITEM: (String, Vec<String>) =
-        (String::from("Languages"), vec![String::from("Chinese"), String::from("English"), String::from("Japanese")]);
+    static ref TEST_ITEM: (String, Vec<String>) = (
+        String::from("Languages"),
+        vec![
+            String::from("Chinese"),
+            String::from("English"),
+            String::from("Japanese")
+        ]
+    );
 }
 
 pub struct Type1Render {}
@@ -84,10 +94,7 @@ impl Type1Render {
             S,         // 1. honor description
             (u32, u8), // 2. honor time (year, month)
         )>,
-        skill: &'static Vec<(
-            S,
-            Vec<S>
-        )>
+        skill: &'static Vec<(S, Vec<S>)>,
     ) -> Document
     where
         S: AsRef<str>,
@@ -566,8 +573,10 @@ impl Type1Render {
 
     pub fn render_skill_tail(doc: &mut Document) -> &mut Document {
         let mut section = String::from("");
-        section.push_str(r"    }}
-\end{itemize}");
+        section.push_str(
+            r"    }}
+\end{itemize}",
+        );
         doc.push(Element::UserDefined(section));
         doc
     }
@@ -585,11 +594,7 @@ impl Type1Render {
                 v.push_str(i.as_str());
                 v.push_str(" ");
             }
-            section.push_str(format!(
-                "    \\textbf{{{}}}{{: {}}} \\\\",
-                k,
-                v
-            ).as_str());
+            section.push_str(format!("    \\textbf{{{}}}{{: {}}} \\\\", k, v).as_str());
         }
         doc.push(Element::UserDefined(section));
         doc

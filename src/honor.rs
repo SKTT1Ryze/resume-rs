@@ -4,7 +4,7 @@
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
 use crate::{Inner, IntoInner, ResumeElement};
 
