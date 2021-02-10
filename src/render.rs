@@ -7,9 +7,9 @@
 
 extern crate latex;
 extern crate lazy_static;
-use latex::{Document, Element, Preamble, PreambleElement, Section};
+use latex::{Document, Element, PreambleElement, Section};
 use lazy_static::lazy_static;
-use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{self, Template}, work::{self, WorkInner}};
+use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{Template}, work::{WorkInner}};
 use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
 
 lazy_static! {
