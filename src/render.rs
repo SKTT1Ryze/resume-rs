@@ -7,7 +7,7 @@
 
 extern crate latex;
 extern crate lazy_static;
-use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month, skill::{self, SkillInner}};
+use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month, skill::{self, SkillInner}, template};
 use crate::{
     education::{Degree, EduInner},
     honor::HonorInner,
@@ -84,6 +84,10 @@ impl Type1Render {
             S,         // 1. honor description
             (u32, u8), // 2. honor time (year, month)
         )>,
+        skill: &'static Vec<(
+            S,
+            Vec<S>
+        )>
     ) -> Document
     where
         S: AsRef<str>,
@@ -191,6 +195,9 @@ impl Type1Render {
         for d in honor {
             template.honor(&d.0, &d.1, (d.2 .0, d.2 .1));
         }
+        for d in skill {
+            template.skill(d);
+        }
         for elem in &template.resume().elements {
             if let Some(info) = elem.info_inner() {
                 Type1Render::render_info(&mut doc, info);
@@ -224,6 +231,13 @@ impl Type1Render {
             }
         }
         Self::render_honor_tail(&mut doc);
+        Self::render_skill_head(&mut doc);
+        for elem in &template.resume().elements {
+            if let Some(skill) = elem.skill_inner() {
+                Self::render_skill(&mut doc, &skill);
+            }
+        }
+        Self::render_skill_tail(&mut doc);
         doc
     }
 
