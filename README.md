@@ -1,5 +1,5 @@
 # resume-rs
-[English](./README_en.md) [中文](./README.md)  
+[English](./README.md) [中文](./README_ch.md)  
 Resume Template Written with Rust  
 
 ## What it is
