@@ -24,7 +24,7 @@ impl Work {
 
 impl ResumeElement for Work {
     fn title(&self) -> Option<String> {
-        Some(String::from("Work Experience"))
+        Some(String::from("WORK EXPERIENCE"))
     }
 
     fn inner(&self) -> Vec<Box<dyn Inner>> {

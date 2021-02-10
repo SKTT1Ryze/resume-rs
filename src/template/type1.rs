@@ -7,6 +7,7 @@
 
 use education::{Degree, EduInner, Education};
 use info::{InfoInner, PersonalInfo};
+use proj::Project;
 use work::{Work, WorkClass, WorkInner};
 
 use super::{Template, Typography};
@@ -150,6 +151,37 @@ impl TemplateType1 {
         let mut type1_fulltime = Work::default();
         type1_fulltime.append_inner(type1_fulltime_inner);
         self.resume.append_element(type1_fulltime);
+        self
+    }
+
+    pub fn project<S>(
+        &mut self,
+        proj_name: &'static S,
+        group: &'static S,
+        lang: Option<&'static S>,
+        year: (u32, u32),
+        month: (u8, u8),
+    ) -> &mut Self
+    where S: AsRef<str>
+    {
+        let type1_proj_inner = Type1ProjectInner {
+            proj_name: proj_name.as_ref(),
+            group: group.as_ref(),
+            lang: match lang {
+                Some(l) => Some(l.as_ref()),
+                None => None,
+            },
+            time_situation: Type1ProjTimeSituation (
+                Type1ProjTime {
+                    year,
+                    month
+                },
+                Type1ProjSituation::default()
+            )
+        };
+        let mut type1_project = Project::default();
+        type1_project.append_inner(type1_proj_inner);
+        self.resume.append_element(type1_project);
         self
     }
 }
@@ -389,5 +421,74 @@ impl Situation for Type1WorkSituation {
     }
     fn city(&self) -> Option<String> {
         Some(self.city.clone())
+    }
+}
+
+pub struct Type1ProjectInner<'a> {
+    proj_name: &'a str,
+    group: &'a str,
+    lang: Option<&'a str>,
+    time_situation: Type1ProjTimeSituation
+}
+
+impl<'a> IntoInner for Type1ProjectInner<'a> {
+    fn to_inner(&self) -> Box<dyn Inner> {
+        Box::new(self.time_situation)
+    }
+}
+
+impl<'a> ProjInner for Type1ProjectInner<'a> {
+    fn project(&self) -> String {
+        String::from(self.proj_name)
+    }
+    fn group(&self) -> String {
+        String::from(self.group)
+    }
+    fn lang(&self) -> Option<String> {
+        if let Some(l) = self.lang {
+            Some(String::from(l))
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Type1ProjTimeSituation (
+    Type1ProjTime,
+    Type1ProjSituation
+);
+
+impl Inner for Type1ProjTimeSituation {
+    fn time(&self) -> Box<dyn Time> {
+        Box::new(self.0)
+    }
+    fn situation(&self) -> Box<dyn Situation> {
+        Box::new(self.1)
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Type1ProjTime {
+    year: (u32, u32),
+    month: (u8, u8)
+}
+impl Time for Type1ProjTime {
+    fn year(&self) -> Option<(u32, u32)> {
+        Some(self.year)
+    }
+    fn month(&self) -> Option<(u8, u8)> {
+        Some(self.month)
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1ProjSituation {}
+impl Situation for Type1ProjSituation {
+    fn province(&self) -> Option<String> {
+        None
+    }
+    fn city(&self) -> Option<String> {
+        None
     }
 }

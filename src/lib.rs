@@ -8,12 +8,13 @@
 
 use education::EduInner;
 use info::InfoInner;
+use proj::ProjInner;
 use work::WorkInner;
 
 pub mod info;
 pub mod education;
 pub mod work;
-
+pub mod proj;
 pub mod template;
 pub mod render;
 
@@ -56,6 +57,9 @@ pub trait ResumeElement {
         None
     }
     fn work_inner(&self) -> Option<Vec<Box<&dyn WorkInner>>> {
+        None
+    }
+    fn proj_inner(&self) -> Option<Vec<Box<&dyn ProjInner>>> {
         None
     }
 }

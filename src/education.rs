@@ -21,7 +21,7 @@ impl Education {
 
 impl ResumeElement for Education {
     fn title(&self) -> Option<String> {
-        Some(String::from("Education"))
+        Some(String::from("EDUCATION"))
     }
     fn inner(&self) -> Vec<Box<dyn Inner>> {
         let mut inner = Vec::new();
