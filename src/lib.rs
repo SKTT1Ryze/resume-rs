@@ -11,6 +11,7 @@ use honor::HonorInner;
 use info::InfoInner;
 use proj::ProjInner;
 use work::WorkInner;
+use skill::SkillInner;
 
 pub mod education;
 pub mod honor;
@@ -19,6 +20,7 @@ pub mod proj;
 pub mod render;
 pub mod template;
 pub mod work;
+pub mod skill;
 
 /// The resume, included `ResumeClass`
 /// and some object implemented `ResumeElement` trait
@@ -66,6 +68,9 @@ pub trait ResumeElement {
         None
     }
     fn honor_inner(&self) -> Option<Vec<Box<&dyn HonorInner>>> {
+        None
+    }
+    fn skill_inner(&self) -> Option<Vec<Box<&dyn SkillInner>>> {
         None
     }
 }

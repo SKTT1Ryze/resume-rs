@@ -10,6 +10,7 @@ use honor::Honor;
 use info::{InfoInner, PersonalInfo};
 use proj::Project;
 use work::{Work, WorkClass, WorkInner};
+use skill::{Skill, SkillInner};
 
 use super::{Template, Typography};
 use crate::*;
@@ -196,6 +197,28 @@ impl TemplateType1 {
         let mut type1_honor = Honor::default();
         type1_honor.append_inner(type1_honor_inner);
         self.resume.append_element(type1_honor);
+        self
+    }
+
+    pub fn skill<S>(
+        &mut self,
+        items: &'static Vec<(S, Vec<S>)>
+    ) -> &mut Self
+    where
+        S: AsRef<str>,
+    {
+        let mut i = Vec::new();
+        for item in items {
+            let v: Vec<&str> = item.1.iter().map(|s| s.as_ref()).collect();
+            i.push((item.0.as_ref(), v));
+        }
+        let type1_skill_inner = Type1SkillInner {
+            item: i,
+            time_situation: Type1SkillTimeSituation::default()
+        };
+        let mut type1_skill = Skill::default();
+        type1_skill.append_inner(type1_skill_inner);
+        self.resume.append_element(type1_skill);
         self
     }
 }
@@ -533,3 +556,46 @@ impl Time for Type1HonorTime {}
 #[derive(Clone, Copy, Default)]
 pub struct Type1HonorSituation {}
 impl Situation for Type1HonorSituation {}
+
+
+pub struct Type1SkillInner<'a> {
+    item: Vec<(&'a str, Vec<&'a str>)>,
+    time_situation: Type1SkillTimeSituation,
+}
+
+impl<'a> IntoInner for Type1SkillInner<'a> {
+    fn to_inner(&self) -> Box<dyn Inner> {
+        Box::new(self.time_situation)
+    }
+}
+
+impl<'a> SkillInner for Type1SkillInner<'a> {
+    fn items(&self) -> Vec<(String, Vec<String>)> {
+        let mut items = Vec::new();
+        for i in &self.item {
+            let v: Vec<String> = i.1.iter().map(|s| String::from(*s)).collect();
+            items.push((String::from(i.0), v));
+        }
+        items
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1SkillTimeSituation(Type1SkillTime, Type1SkillSituation);
+
+impl Inner for Type1SkillTimeSituation {
+    fn time(&self) -> Box<dyn Time> {
+        Box::new(self.0)
+    }
+    fn situation(&self) -> Box<dyn Situation> {
+        Box::new(self.1)
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1SkillTime {}
+impl Time for Type1SkillTime {}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1SkillSituation {}
+impl Situation for Type1SkillSituation {}
