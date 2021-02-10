@@ -1,16 +1,22 @@
 //! Rendering Latex Document
-//! 
+//!
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
 extern crate latex;
 extern crate lazy_static;
+use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month};
+use crate::{
+    education::{Degree, EduInner},
+    info::InfoInner,
+    proj::ProjInner,
+    template::Template,
+    work::WorkInner,
+};
 use latex::{Document, Element, PreambleElement, Section};
 use lazy_static::lazy_static;
-use crate::{education::{EduInner, Degree}, info::{InfoInner}, proj::ProjInner, template::{self, Template}, work::{WorkInner}};
-use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
 
 lazy_static! {
     static ref TEST_NAME: String = String::from("XXX");
@@ -27,7 +33,7 @@ lazy_static! {
         vec![
             String::from("Developing LOL in RIOT"),
             String::from("Game Server Testing"),
-            ]
+        ]
     };
     static ref TEST_PROJ: String = String::from("RISC-V Processor With Rustlang");
     static ref TEST_GROUP: String = String::from("RISC-V Foundation");
@@ -47,29 +53,30 @@ impl Type1Render {
         email: &'static S,
         github: &'static S,
         education: &'static Vec<(
-            S, // 0. school
-            S, // 1. major
+            S,          // 0. school
+            S,          // 1. major
             (u32, u32), // 2. year
-            (u8, u8), // 3. month
-            (S, S) // 4. situation
+            (u8, u8),   // 3. month
+            (S, S),     // 4. situation
         )>,
         work: &'static Vec<(
-            S, // 0. company
-            S, // 1. position,
-            Vec<S>, // 2. content
+            S,          // 0. company
+            S,          // 1. position,
+            Vec<S>,     // 2. content
             (u32, u32), // 3. year
-            (u8, u8), // 4. month
-            (S, S) // 5. situation
+            (u8, u8),   // 4. month
+            (S, S),     // 5. situation
         )>,
         project: &'static Vec<(
-            S, // 0. project name
-            S, // 1. group,
-            Option<S>, // 2. lang
+            S,          // 0. project name
+            S,          // 1. group,
+            Option<S>,  // 2. lang
             (u32, u32), // 3. year
-            (u8, u8), // 4. month
+            (u8, u8),   // 4. month
         )>,
     ) -> Document
-    where S: AsRef<str>
+    where
+        S: AsRef<str>,
     {
         use crate::template::type1::TemplateType1;
         let mut doc = Document::default();
@@ -82,94 +89,94 @@ impl Type1Render {
         doc.preamble.use_package("tabularx");
         doc.preamble.use_package("tikz");
         doc.preamble.use_package("palatino");
-        doc.preamble.push(PreambleElement::UsePackage{
+        doc.preamble.push(PreambleElement::UsePackage {
             package: String::from("fullpage"),
-            argument: Some(String::from("empty"))
+            argument: Some(String::from("empty")),
         });
-        doc.preamble.push(PreambleElement::UsePackage{
+        doc.preamble.push(PreambleElement::UsePackage {
             package: String::from("color"),
-            argument: Some(String::from("usenames,dvipsnames"))
+            argument: Some(String::from("usenames,dvipsnames")),
         });
-        doc.preamble.push(PreambleElement::UsePackage{
+        doc.preamble.push(PreambleElement::UsePackage {
             package: String::from("hyperref"),
-            argument: Some(String::from("hidelinks"))
+            argument: Some(String::from("hidelinks")),
         });
-        doc.preamble.push(PreambleElement::UsePackage{
+        doc.preamble.push(PreambleElement::UsePackage {
             package: String::from("babel"),
-            argument: Some(String::from("english"))
+            argument: Some(String::from("english")),
         });
         Self::render_typography(&mut doc, &template);
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\urlstyle{same}")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\raggedbottom")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\raggedright")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\setlength{\tabcolsep}{0cm}")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\titleformat{\section}{
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\urlstyle{same}",
+        )));
+        doc.preamble
+            .push(PreambleElement::UserDefined(String::from(r"\raggedbottom")));
+        doc.preamble
+            .push(PreambleElement::UserDefined(String::from(r"\raggedright")));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\setlength{\tabcolsep}{0cm}",
+        )));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\titleformat{\section}{
 \vspace{-4pt}\scshape\raggedright\large
-}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\pdfgentounicode=1")
-        ));
-        doc.preamble.new_command("CVItem", 1, r"
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]",
+        )));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\pdfgentounicode=1",
+        )));
+        doc.preamble.new_command(
+            "CVItem",
+            1,
+            r"
 \item\small{
     {#1 \vspace{-2pt}}
-    }");
-        doc.preamble.new_command("CVSubheading", 4, r"
+    }",
+        );
+        doc.preamble.new_command(
+            "CVSubheading",
+            4,
+            r"
 \vspace{-2pt}\item
     \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
         \textbf{#1} & #2 \\
         \small#3 & \small #4 \\
-    \end{tabular*}\vspace{-7pt}");
-        doc.preamble.new_command("CVSubSubheading", 2, r"
+    \end{tabular*}\vspace{-7pt}",
+        );
+        doc.preamble.new_command(
+            "CVSubSubheading",
+            2,
+            r"
     \item
     \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
       \text{\small#1} & \text{\small #2} \\
-    \end{tabular*}\vspace{-7pt}");
-        doc.preamble.new_command("CVSubItem", 1, r"\CVItem{#1}\vspace{-4pt}");
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\newcommand{\CVSubHeadingListStart}{\begin{itemize}[leftmargin=0.5cm, label={}]}")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\newcommand{\CVSubHeadingListEnd}{\end{itemize}}")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\newcommand{\CVItemListStart}{\begin{itemize}}")
-        ));
-        doc.preamble.push(PreambleElement::UserDefined(
-            String::from(r"\newcommand{\CVItemListEnd}{\end{itemize}\vspace{-5pt}}")
-        ));
-        template.personal_info(
-            name,
-            phone,
-            email,
-            github
+    \end{tabular*}\vspace{-7pt}",
         );
+        doc.preamble
+            .new_command("CVSubItem", 1, r"\CVItem{#1}\vspace{-4pt}");
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}",
+        )));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\newcommand{\CVSubHeadingListStart}{\begin{itemize}[leftmargin=0.5cm, label={}]}",
+        )));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\newcommand{\CVSubHeadingListEnd}{\end{itemize}}",
+        )));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\newcommand{\CVItemListStart}{\begin{itemize}}",
+        )));
+        doc.preamble.push(PreambleElement::UserDefined(String::from(
+            r"\newcommand{\CVItemListEnd}{\end{itemize}\vspace{-5pt}}",
+        )));
+        template.personal_info(name, phone, email, github);
         for d in education {
-            template.undergraduate(
-                &d.0, &d.1, d.2, d.3, (&d.4.0, &d.4.1)
-            );
+            template.undergraduate(&d.0, &d.1, d.2, d.3, (&d.4 .0, &d.4 .1));
         }
         for d in work {
-            template.fulltime_work(
-                &d.0, &d.1, &d.2, d.3, d.4, (&d.5.0, &d.5.1)
-            );
+            template.fulltime_work(&d.0, &d.1, &d.2, d.3, d.4, (&d.5 .0, &d.5 .1));
         }
         for d in project {
-            template.project(
-                &d.0, &d.1, d.2.as_ref(), (d.3.0, d.3.1), (d.4.0, d.4.1)
-            );
+            template.project(&d.0, &d.1, d.2.as_ref(), (d.3 .0, d.3 .1), (d.4 .0, d.4 .1));
         }
         for elem in &template.resume().elements {
             if let Some(info) = elem.info_inner() {
@@ -200,7 +207,10 @@ impl Type1Render {
         doc
     }
 
-    pub fn render_typography<'a>(doc: &'a mut Document, template: &'a dyn Template) -> &'a mut Document{
+    pub fn render_typography<'a>(
+        doc: &'a mut Document,
+        template: &'a dyn Template,
+    ) -> &'a mut Document {
         let typography = template.typography();
         if let Some(x) = typography.oddsidemargin() {
             addtolength!("oddsidemargin", x, doc);
@@ -218,19 +228,23 @@ impl Type1Render {
             addtolength!("textheight", x, doc);
         }
         if let Some(s) = typography.other() {
-            doc.preamble.push(
-                PreambleElement::UserDefined(s)
-            );
+            doc.preamble.push(PreambleElement::UserDefined(s));
         }
         doc
     }
 
-    pub fn render_info<'a>(doc: &'a mut Document, info: Box<&'a dyn InfoInner>) -> &'a mut Document {
-        let minipage = format!(r#"\begin{{minipage}}[c]{{0.05\textwidth}}
+    pub fn render_info<'a>(
+        doc: &'a mut Document,
+        info: Box<&'a dyn InfoInner>,
+    ) -> &'a mut Document {
+        let minipage = format!(
+            r#"\begin{{minipage}}[c]{{0.05\textwidth}}
 \-\
-\end{{minipage}}"#);
+\end{{minipage}}"#
+        );
         doc.push(Element::UserDefined(minipage));
-        let minipage = String::from(r"\begin{minipage}[c]{0.2\textwidth}
+        let minipage = String::from(
+            r"\begin{minipage}[c]{0.2\textwidth}
 \begin{tikzpicture}
     \clip (0,0) circle (1.75cm);
     \node at (0,-.7) {\includegraphics[width = 9cm]{portrait}}; 
@@ -238,7 +252,8 @@ impl Type1Render {
     % width defines the 'zoom' of the picture
 \end{tikzpicture}
 \hfill\vline\hfill
-\end{minipage}");
+\end{minipage}",
+        );
         doc.push(Element::UserDefined(minipage));
         let name = ifhaveinfo!(info.name());
         let phone = ifhaveinfo!(info.phone());
@@ -249,24 +264,29 @@ impl Type1Render {
         for _ in 0..8 {
             github_name.remove(0);
         }
-        let info = format!(r#"\begin{{minipage}}[c]{{0.4\textwidth}}
+        let info = format!(
+            r#"\begin{{minipage}}[c]{{0.4\textwidth}}
     \textbf{{\Huge \scshape{{{}}}}} \\ \vspace{{1pt}} 
     % \scshape sets small capital letters, remove if desired
     \small{{{}}} \\
     \href{{mailto:you@provider.com}}{{\underline{{{}}}}}\\
     % Be sure to use a professional *personal* email address
     \href{{{}}}{{\underline{{{}}}}}
-\end{{minipage}}"#, name, phone, email, github_url, github_name);
+\end{{minipage}}"#,
+            name, phone, email, github_url, github_name
+        );
         doc.push(Element::UserDefined(info));
         doc
     }
 
     pub fn render_edu_head(doc: &mut Document) -> &mut Document {
         let mut section = Section::new("Education");
-        section.push(r"\CVSubHeadingListStart
+        section.push(
+            r"\CVSubHeadingListStart
 %    \CVSubheading % Example
 %      {Degree Achieved}{Years of Study}
-%      {Institution of Study}{Where it is located}");
+%      {Institution of Study}{Where it is located}",
+        );
         doc.push(section);
         doc
     }
@@ -278,7 +298,10 @@ impl Type1Render {
         doc
     }
 
-    pub fn render_education<'a>(doc: &'a mut Document, edu: &Vec<Box<&'a dyn EduInner>>) -> &'a mut Document {
+    pub fn render_education<'a>(
+        doc: &'a mut Document,
+        edu: &Vec<Box<&'a dyn EduInner>>,
+    ) -> &'a mut Document {
         let mut section = String::new();
         for e in edu {
             section.push_str("    \\CVSubheading\n");
@@ -286,16 +309,15 @@ impl Type1Render {
             match e.experience() {
                 Degree::Undergraduate(school, major) => {
                     degree_shcool_major = ("Undergraduate", school, major);
-                    
-                },
+                }
                 Degree::Master(school, major) => {
                     degree_shcool_major = ("Master", school, major);
-                },
+                }
                 Degree::Doctor(school, major) => {
                     degree_shcool_major = ("Doctor", school, major);
-                },
+                }
                 Degree::Other(_message) => {
-                    todo!()    
+                    todo!()
                 }
             }
             let year = e.to_inner().time().year();
@@ -305,17 +327,22 @@ impl Type1Render {
                 e.to_inner().situation().province(),
                 e.to_inner().situation().city()
             );
-            section.push_str(format!(
-                "        {{{{{} $|$ \\emph{{\\small{{Major: {}}}}}}}}}{{{}}}\n",
-                degree_shcool_major.0,
-                degree_shcool_major.2,
-                time.as_str()
-            ).as_str());
-            section.push_str(format!(
-                "        {{{}}}{{{}}}\n",
-                degree_shcool_major.1,
-                province_city
-            ).as_str());
+            section.push_str(
+                format!(
+                    "        {{{{{} $|$ \\emph{{\\small{{Major: {}}}}}}}}}{{{}}}\n",
+                    degree_shcool_major.0,
+                    degree_shcool_major.2,
+                    time.as_str()
+                )
+                .as_str(),
+            );
+            section.push_str(
+                format!(
+                    "        {{{}}}{{{}}}\n",
+                    degree_shcool_major.1, province_city
+                )
+                .as_str(),
+            );
         }
         doc.push(Element::UserDefined(section));
         doc
@@ -323,13 +350,15 @@ impl Type1Render {
 
     pub fn render_work_head(doc: &mut Document) -> &mut Document {
         let mut section = Section::new("Work Experience");
-        section.push(r"\CVSubHeadingListStart
+        section.push(
+            r"\CVSubHeadingListStart
 %    \CVSubheading %Example
 %      {What you did}{When you worked there}
 %      {Who you worked for}{Where they are located}
 %      \CVItemListStart
 %        \CVItem{Why it is important to this employer}
-%      \CVItemListEnd");
+%      \CVItemListEnd",
+        );
         doc.push(section);
         doc
     }
@@ -341,7 +370,10 @@ impl Type1Render {
         doc
     }
 
-    pub fn render_work<'a>(doc: &'a mut Document, work: &Vec<Box<&'a dyn WorkInner>>) -> &'a mut Document {
+    pub fn render_work<'a>(
+        doc: &'a mut Document,
+        work: &Vec<Box<&'a dyn WorkInner>>,
+    ) -> &'a mut Document {
         let mut section = String::from("");
         for w in work {
             let company = w.company();
@@ -361,17 +393,16 @@ impl Type1Render {
                 cv_items.push_str("}");
             }
             cv_items.push_str("\n    \\CVItemListEnd");
-            section.push_str(format!(
-                r"    \CVSubheading
+            section.push_str(
+                format!(
+                    r"    \CVSubheading
     {{{}}}{{{}}}
     {{{}}}{{{}}}
 {}",
-                position,
-                time,
-                company,
-                province_city,
-                cv_items
-            ).as_str());
+                    position, time, company, province_city, cv_items
+                )
+                .as_str(),
+            );
         }
         doc.push(Element::UserDefined(section));
         doc
@@ -379,10 +410,12 @@ impl Type1Render {
 
     pub fn render_proj_head(doc: &mut Document) -> &mut Document {
         let mut section = Section::new("Projects and Research");
-        section.push(r"\CVSubHeadingListStart
+        section.push(
+            r"\CVSubHeadingListStart
 %   \CVSubheading
 %      {Title of Work}{When}
-%      {Institution you worked with}{where}");
+%      {Institution you worked with}{where}",
+        );
         doc.push(section);
         doc
     }
@@ -394,14 +427,17 @@ impl Type1Render {
         doc
     }
 
-    pub fn render_project<'a>(doc: &'a mut Document, projs: &Vec<Box<&'a dyn ProjInner>>) -> &'a mut Document {
+    pub fn render_project<'a>(
+        doc: &'a mut Document,
+        projs: &Vec<Box<&'a dyn ProjInner>>,
+    ) -> &'a mut Document {
         let mut section = String::from("");
         for p in projs {
             let proj_name = p.project();
             let group = p.group();
             let lang = match p.lang() {
                 Some(l) => l,
-                None => String::from("")
+                None => String::from(""),
             };
             let year = p.to_inner().time().year();
             let month = p.to_inner().time().month();
@@ -411,29 +447,27 @@ impl Type1Render {
                 p.to_inner().situation().city()
             );
             section.push_str("    \\CVSubheading");
-            section.push_str(format!(
-                r"
+            section.push_str(
+                format!(
+                    r"
     {{{{{}}} $|$ \emph{{\small{{{}}}}}}}{{{}}}
     {{{}}}{{{}}}",
-                proj_name,
-                lang,
-                time,
-                group,
-                province_city
-            ).as_str());
+                    proj_name, lang, time, group, province_city
+                )
+                .as_str(),
+            );
         }
         doc.push(Element::UserDefined(section));
         doc
     }
-
 }
 
 #[macro_export]
 macro_rules! addtolength {
     ($s:expr, $x:expr, $e:expr) => {
-        let command = format!(r"\addtolength{{\{}}}{{{}cm}}",$s, $x);
-            let preamble_elem = PreambleElement::UserDefined(command);
-            $e.preamble.push(preamble_elem);
+        let command = format!(r"\addtolength{{\{}}}{{{}cm}}", $s, $x);
+        let preamble_elem = PreambleElement::UserDefined(command);
+        $e.preamble.push(preamble_elem);
     };
 }
 
@@ -452,7 +486,13 @@ macro_rules! ifhaveinfo {
 macro_rules! ifhavemonthyear {
     ($y:expr, $m:expr) => {
         if let (Some(year), Some(month)) = ($y, $m) {
-            format!("{} {} -- {} {}", month!(month.0), year.0, month!(month.1), year.1)
+            format!(
+                "{} {} -- {} {}",
+                month!(month.0),
+                year.0,
+                month!(month.1),
+                year.1
+            )
         } else {
             String::from("")
         }
@@ -486,8 +526,8 @@ macro_rules! month {
             10 => "October",
             11 => "November",
             12 => "December",
-            _ => panic!("Inexistent Month!")
-        }        
+            _ => panic!("Inexistent Month!"),
+        }
     };
 }
 
@@ -497,21 +537,23 @@ fn addtolength_test() {
     addtolength!("oddsidemargin", -1, document);
     assert_eq!(
         latex::print(&document).unwrap(),
-        String::from(r"\documentclass{article}
+        String::from(
+            r"\documentclass{article}
 \addtolength{\oddsidemargin}{-1cm}
 \begin{document}
 \end{document}
-")
+"
+        )
     );
 }
 
 #[test]
 fn type1_render_typography_test() {
-    use crate::Resume;
     use crate::template::Typography;
+    use crate::Resume;
     struct SimpleTemplate {
         typography: SimpleTypography,
-        resume: Resume
+        resume: Resume,
     };
     impl Template for SimpleTemplate {
         fn typography(&self) -> Box<dyn Typography> {
@@ -525,7 +567,7 @@ fn type1_render_typography_test() {
         pub fn new() -> Self {
             Self {
                 typography: SimpleTypography {},
-                resume: Resume::default()
+                resume: Resume::default(),
             }
         }
     }
@@ -555,7 +597,8 @@ fn type1_render_typography_test() {
     let template = SimpleTemplate::new();
     let mut document = Document::default();
     let document = Type1Render::render_typography(&mut document, &template);
-    let should_be = format!(r"\documentclass{{article}}
+    let should_be = format!(
+        r"\documentclass{{article}}
 \addtolength{{\oddsidemargin}}{{-1cm}}
 \addtolength{{\evensidemargin}}{{-1cm}}
 \addtolength{{\textwidth}}{{2cm}}
@@ -563,11 +606,9 @@ fn type1_render_typography_test() {
 \addtolength{{\textheight}}{{2cm}}
 \begin{{document}}
 \end{{document}}
-");
-    assert_eq!(
-        latex::print(&document).unwrap(),
-        should_be
+"
     );
+    assert_eq!(latex::print(&document).unwrap(), should_be);
 }
 
 #[test]
@@ -579,7 +620,7 @@ fn type1_render_info_test() {
         &(*TEST_NAME),
         &(*TEST_PHONE),
         &(*TEST_EMAIL),
-        &(*TEST_GITHUB)
+        &(*TEST_GITHUB),
     );
     let resume = template.resume();
     let mut doc = Document::default();
@@ -588,7 +629,8 @@ fn type1_render_info_test() {
             Type1Render::render_info(&mut doc, info);
         }
     }
-    let should_be = format!(r"\documentclass{{article}}
+    let should_be = format!(
+        r"\documentclass{{article}}
 \begin{{document}}
 \begin{{minipage}}[c]{{0.05\textwidth}}
 \-\
@@ -611,11 +653,9 @@ fn type1_render_info_test() {
     \href{{https://github.com/XXX}}{{\underline{{github.com/XXX}}}}
 \end{{minipage}}
 \end{{document}}
-");
-    assert_eq!(
-        should_be,
-        latex::print(&doc).unwrap()
+"
     );
+    assert_eq!(should_be, latex::print(&doc).unwrap());
 }
 
 #[test]
@@ -628,14 +668,14 @@ fn type1_render_education_test() {
         &(*TEST_MAJOR),
         (2015, 2019),
         (9, 7),
-        (&(*TEST_PROVINCE), &(*TEST_CITY))
+        (&(*TEST_PROVINCE), &(*TEST_CITY)),
     );
     template.undergraduate(
         &(*TEST_SCHOOL),
         &(*TEST_MAJOR),
         (2015, 2019),
         (9, 7),
-        (&(*TEST_PROVINCE), &(*TEST_CITY))
+        (&(*TEST_PROVINCE), &(*TEST_CITY)),
     );
     let resume = template.resume();
     let mut doc = Document::default();
@@ -646,7 +686,8 @@ fn type1_render_education_test() {
         }
     }
     Type1Render::render_edu_tail(doc);
-    let should_be = format!(r"\documentclass{{article}}
+    let should_be = format!(
+        r"\documentclass{{article}}
 \begin{{document}}
 \section{{Education}}
 
@@ -665,11 +706,9 @@ fn type1_render_education_test() {
 
 \CVSubHeadingListEnd
 \end{{document}}
-");
-    assert_eq!(
-        should_be,
-        latex::print(&doc).unwrap()
+"
     );
+    assert_eq!(should_be, latex::print(&doc).unwrap());
 }
 
 #[test]
@@ -683,7 +722,7 @@ fn type1_render_work_test() {
         &(*TEST_CONTENT),
         (2020, 2025),
         (1, 1),
-        (&(*TEST_PROVINCE), &(*TEST_CITY))
+        (&(*TEST_PROVINCE), &(*TEST_CITY)),
     );
     template.internship(
         &(*TEST_COMPANY),
@@ -691,7 +730,7 @@ fn type1_render_work_test() {
         &(*TEST_CONTENT),
         (2020, 2025),
         (1, 1),
-        (&(*TEST_PROVINCE), &(*TEST_CITY))
+        (&(*TEST_PROVINCE), &(*TEST_CITY)),
     );
     let resume = template.resume();
     let mut doc = Document::default();
@@ -702,7 +741,8 @@ fn type1_render_work_test() {
         }
     }
     Type1Render::render_work_tail(doc);
-    let should_be = format!(r"\documentclass{{article}}
+    let should_be = format!(
+        r"\documentclass{{article}}
 \begin{{document}}
 \section{{Work Experience}}
 
@@ -730,11 +770,9 @@ fn type1_render_work_test() {
     \CVItemListEnd
 \CVSubHeadingListEnd
 \end{{document}}
-");
-    assert_eq!(
-        should_be,
-        latex::print(&doc).unwrap()
+"
     );
+    assert_eq!(should_be, latex::print(&doc).unwrap());
 }
 
 #[test]
@@ -747,14 +785,14 @@ fn type1_render_proj_test() {
         &(*TEST_GROUP),
         Some(&(*TEST_LANG)),
         (2030, 2032),
-        (3, 3)       
+        (3, 3),
     );
     template.project(
         &(*TEST_PROJ),
         &(*TEST_GROUP),
         Some(&(*TEST_LANG)),
         (2030, 2032),
-        (3, 3)       
+        (3, 3),
     );
     let resume = template.resume();
     let mut doc = Document::default();
@@ -765,7 +803,8 @@ fn type1_render_proj_test() {
         }
     }
     Type1Render::render_proj_tail(doc);
-    let should_be = format!(r"\documentclass{{article}}
+    let should_be = format!(
+        r"\documentclass{{article}}
 \begin{{document}}
 \section{{Projects and Research}}
 
@@ -782,9 +821,7 @@ fn type1_render_proj_test() {
     {{RISC-V Foundation}}{{}}
 \CVSubHeadingListEnd
 \end{{document}}
-");
-    assert_eq!(
-        should_be,
-        latex::print(&doc).unwrap()
+"
     );
+    assert_eq!(should_be, latex::print(&doc).unwrap());
 }

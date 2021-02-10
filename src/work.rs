@@ -1,19 +1,15 @@
 //! Work Experience Implementation of `ResumeElement` Trait  
 //! Maily include company, position, simple introduction of job content, etc.  
-//! 
+//!
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
-use crate::{
-    Inner,
-    IntoInner,
-    ResumeElement
-};
+use crate::{Inner, IntoInner, ResumeElement};
 #[derive(Default)]
 pub struct Work {
-    inners: Vec<Box<dyn WorkInner>>
+    inners: Vec<Box<dyn WorkInner>>,
 }
 
 impl Work {
@@ -35,8 +31,8 @@ impl ResumeElement for Work {
         inner
     }
     fn work_inner(&self) -> Option<Vec<Box<&dyn WorkInner>>> {
-        let work_inners: Vec<Box<&dyn WorkInner>> = self.inners.iter()
-            .map(|e| Box::new(e.as_ref())).collect();
+        let work_inners: Vec<Box<&dyn WorkInner>> =
+            self.inners.iter().map(|e| Box::new(e.as_ref())).collect();
         Some(work_inners)
     }
 }
@@ -51,5 +47,5 @@ pub trait WorkInner: IntoInner {
 pub enum WorkClass {
     Internship,
     FullTime,
-    Other(String)
+    Other(String),
 }

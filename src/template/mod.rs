@@ -1,6 +1,6 @@
 //! Some Implementations of Resume Template  
-//! 
-//! 
+//!
+//!
 
 pub mod type1;
 
@@ -31,4 +31,3 @@ pub trait Typography {
         None
     }
 }
-

@@ -1,16 +1,16 @@
 //! Education Experience Implementation of `ResumeElement` Trait  
 //! Maily include undergraduate, master, doctor, etc.  
-//! 
+//!
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
 use crate::{Inner, IntoInner, ResumeElement};
 
 #[derive(Default)]
 pub struct Education {
-    inners: Vec<Box<dyn EduInner>>
+    inners: Vec<Box<dyn EduInner>>,
 }
 
 impl Education {
@@ -31,8 +31,8 @@ impl ResumeElement for Education {
         inner
     }
     fn edu_inner(&self) -> Option<Vec<Box<&dyn EduInner>>> {
-        let edu_inners: Vec<Box<&dyn EduInner>> = self.inners.iter()
-            .map(|e| Box::new(e.as_ref())).collect();
+        let edu_inners: Vec<Box<&dyn EduInner>> =
+            self.inners.iter().map(|e| Box::new(e.as_ref())).collect();
         Some(edu_inners)
     }
 }
@@ -46,5 +46,5 @@ pub enum Degree {
     Undergraduate(String, String),
     Master(String, String),
     Doctor(String, String),
-    Other(String)
+    Other(String),
 }

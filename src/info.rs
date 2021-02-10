@@ -2,26 +2,22 @@
 //! Maily included name, phone, email, etc.  
 //!
 //! These informations were mostly placed at the head of resume.  
-//! 
+//!
 //! Example:  
 //! ```Rust
 //! ```
-//! 
-//! 
+//!
+//!
 
-use crate::{
-    Inner,
-    ResumeElement,
-    IntoInner,
-};
+use crate::{Inner, IntoInner, ResumeElement};
 pub struct PersonalInfo {
-    pub inner: Box<dyn InfoInner>
+    pub inner: Box<dyn InfoInner>,
 }
 
 impl PersonalInfo {
     pub fn new<I: InfoInner + 'static>(inner: I) -> Self {
         Self {
-            inner: Box::new(inner)
+            inner: Box::new(inner),
         }
     }
 }

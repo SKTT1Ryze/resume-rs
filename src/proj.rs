@@ -1,26 +1,23 @@
 //! Project Implementation of `ResumeElement` Trait
-//! Mainly include what project you took part in and which group you 
+//! Mainly include what project you took part in and which group you
 //! work in  
-//! 
+//!
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
-use crate::{
-    Inner,
-    IntoInner,
-    ResumeElement
-};
+use crate::{Inner, IntoInner, ResumeElement};
 
 #[derive(Default)]
 pub struct Project {
-    inners: Vec<Box<dyn ProjInner>>
+    inners: Vec<Box<dyn ProjInner>>,
 }
 
 impl Project {
     pub fn append_inner<I>(&mut self, inner: I)
-    where I: ProjInner + 'static
+    where
+        I: ProjInner + 'static,
     {
         self.inners.push(Box::new(inner));
     }
@@ -39,8 +36,8 @@ impl ResumeElement for Project {
         inner
     }
     fn proj_inner(&self) -> Option<Vec<Box<&dyn ProjInner>>> {
-        let proj_inners: Vec<Box<&dyn ProjInner>> = self.inners.iter()
-            .map(|e| Box::new(e.as_ref())).collect();
+        let proj_inners: Vec<Box<&dyn ProjInner>> =
+            self.inners.iter().map(|e| Box::new(e.as_ref())).collect();
         Some(proj_inners)
     }
 }

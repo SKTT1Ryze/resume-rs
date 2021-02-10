@@ -1,11 +1,12 @@
 //! Type1 Implementation of `Template` trait
-//! 
+//!
 //! Example:  
 //! ```Rust
 //! ```
-//! 
+//!
 
 use education::{Degree, EduInner, Education};
+use honor::Honor;
 use info::{InfoInner, PersonalInfo};
 use proj::Project;
 use work::{Work, WorkClass, WorkInner};
@@ -15,7 +16,7 @@ use crate::*;
 
 pub struct TemplateType1 {
     typography: Type1Typography,
-    resume: Resume
+    resume: Resume,
 }
 
 impl Template for TemplateType1 {
@@ -26,14 +27,13 @@ impl Template for TemplateType1 {
     fn typography(&self) -> Box<dyn Typography> {
         Box::new(self.typography)
     }
-
 }
 
 impl TemplateType1 {
     pub fn new() -> Self {
         Self {
             typography: Type1Typography,
-            resume: Resume::default()
+            resume: Resume::default(),
         }
     }
 
@@ -42,16 +42,17 @@ impl TemplateType1 {
         name: &'static S,
         phone: &'static S,
         email: &'static S,
-        github: &'static S
+        github: &'static S,
     ) -> &mut Self
-    where S: AsRef<str>
+    where
+        S: AsRef<str>,
     {
-        let type1_info_inner = Type1InfoInner (
+        let type1_info_inner = Type1InfoInner(
             name.as_ref(),
             phone.as_ref(),
             email.as_ref(),
             github.as_ref(),
-            Type1InfoTimeSituation::default()
+            Type1InfoTimeSituation::default(),
         );
         let type1_info = PersonalInfo::new(type1_info_inner);
         self.resume.append_element(type1_info);
@@ -64,23 +65,21 @@ impl TemplateType1 {
         major: &'static S,
         year: (u32, u32),
         month: (u8, u8),
-        situation: (&'static S, &'static S)
+        situation: (&'static S, &'static S),
     ) -> &mut Self
-    where S: AsRef<str>
+    where
+        S: AsRef<str>,
     {
         let type1_edu_inner = Type1Undergraduate {
             school: school.as_ref(),
             major: major.as_ref(),
-            time_situation: Type1UndergraduateTimeSituation (
-                Type1UndergraduateTime {
-                    year,
-                    month
-                },
+            time_situation: Type1UndergraduateTimeSituation(
+                Type1UndergraduateTime { year, month },
                 Type1UndergraduateSituation {
                     province: String::from(situation.0.as_ref()),
-                    city: String::from(situation.1.as_ref())
-                }
-            )
+                    city: String::from(situation.1.as_ref()),
+                },
+            ),
         };
         let mut type1_degree = Education::default();
         type1_degree.append_inner(type1_edu_inner);
@@ -95,25 +94,23 @@ impl TemplateType1 {
         content: &'static Vec<S>,
         year: (u32, u32),
         month: (u8, u8),
-        situation: (&'static S, &'static S)
+        situation: (&'static S, &'static S),
     ) -> &mut Self
-    where S: AsRef<str>
+    where
+        S: AsRef<str>,
     {
         let c: Vec<&str> = content.iter().map(|c| c.as_ref()).collect();
         let type1_internship_inner = Type1Internship {
             company: company.as_ref(),
             position: position.as_ref(),
             content: c,
-            time_situation: Type1WorkTimeSituation (
-                Type1WorkTime {
-                    year,
-                    month
-                },
+            time_situation: Type1WorkTimeSituation(
+                Type1WorkTime { year, month },
                 Type1WorkSituation {
                     province: String::from(situation.0.as_ref()),
-                    city: String::from(situation.1.as_ref())
-                }
-            )
+                    city: String::from(situation.1.as_ref()),
+                },
+            ),
         };
         let mut type1_internship = Work::default();
         type1_internship.append_inner(type1_internship_inner);
@@ -128,25 +125,23 @@ impl TemplateType1 {
         content: &'static Vec<S>,
         year: (u32, u32),
         month: (u8, u8),
-        situation: (&'static S, &'static S)
+        situation: (&'static S, &'static S),
     ) -> &mut Self
-    where S: AsRef<str>
+    where
+        S: AsRef<str>,
     {
         let c: Vec<&str> = content.iter().map(|c| c.as_ref()).collect();
         let type1_fulltime_inner = Type1FullTimeWork {
             company: company.as_ref(),
             position: position.as_ref(),
             content: c,
-            time_situation: Type1WorkTimeSituation (
-                Type1WorkTime {
-                    year,
-                    month
-                },
+            time_situation: Type1WorkTimeSituation(
+                Type1WorkTime { year, month },
                 Type1WorkSituation {
                     province: String::from(situation.0.as_ref()),
-                    city: String::from(situation.1.as_ref())
-                }
-            )
+                    city: String::from(situation.1.as_ref()),
+                },
+            ),
         };
         let mut type1_fulltime = Work::default();
         type1_fulltime.append_inner(type1_fulltime_inner);
@@ -162,7 +157,8 @@ impl TemplateType1 {
         year: (u32, u32),
         month: (u8, u8),
     ) -> &mut Self
-    where S: AsRef<str>
+    where
+        S: AsRef<str>,
     {
         let type1_proj_inner = Type1ProjectInner {
             proj_name: proj_name.as_ref(),
@@ -171,17 +167,35 @@ impl TemplateType1 {
                 Some(l) => Some(l.as_ref()),
                 None => None,
             },
-            time_situation: Type1ProjTimeSituation (
-                Type1ProjTime {
-                    year,
-                    month
-                },
-                Type1ProjSituation::default()
-            )
+            time_situation: Type1ProjTimeSituation(
+                Type1ProjTime { year, month },
+                Type1ProjSituation::default(),
+            ),
         };
         let mut type1_project = Project::default();
         type1_project.append_inner(type1_proj_inner);
         self.resume.append_element(type1_project);
+        self
+    }
+
+    pub fn honor<S>(
+        &mut self,
+        honor_name: &'static S,
+        description: &'static S,
+        time: (u32, u8), // (year, month)
+    ) -> &mut Self
+    where
+        S: AsRef<str>,
+    {
+        let type1_honor_inner = Type1HonorInner {
+            honor: honor_name.as_ref(),
+            description: description.as_ref(),
+            time: time,
+            time_situation: Type1HonorTimeSituation::default(),
+        };
+        let mut type1_honor = Honor::default();
+        type1_honor.append_inner(type1_honor_inner);
+        self.resume.append_element(type1_honor);
         self
     }
 }
@@ -211,13 +225,7 @@ impl Typography for Type1Typography {
     }
 }
 
-pub struct Type1InfoInner<'a> (
-    &'a str,
-    &'a str,
-    &'a str,
-    &'a str,
-    Type1InfoTimeSituation,
-);
+pub struct Type1InfoInner<'a>(&'a str, &'a str, &'a str, &'a str, Type1InfoTimeSituation);
 
 impl<'a> IntoInner for Type1InfoInner<'a> {
     fn to_inner(&self) -> Box<dyn Inner> {
@@ -244,10 +252,7 @@ impl<'a> InfoInner for Type1InfoInner<'a> {
 }
 
 #[derive(Clone, Copy, Default)]
-pub struct Type1InfoTimeSituation (
-    Type1InfoTime,
-    Type1InfoSituation
-);
+pub struct Type1InfoTimeSituation(Type1InfoTime, Type1InfoSituation);
 
 #[derive(Clone, Copy, Default)]
 struct Type1InfoTime;
@@ -269,7 +274,7 @@ impl Inner for Type1InfoTimeSituation {
 pub struct Type1Undergraduate<'a> {
     school: &'a str,
     major: &'a str,
-    time_situation: Type1UndergraduateTimeSituation
+    time_situation: Type1UndergraduateTimeSituation,
 }
 
 impl<'a> IntoInner for Type1Undergraduate<'a> {
@@ -285,10 +290,7 @@ impl<'a> EduInner for Type1Undergraduate<'a> {
 }
 
 #[derive(Clone)]
-pub struct Type1UndergraduateTimeSituation (
-    Type1UndergraduateTime,
-    Type1UndergraduateSituation
-);
+pub struct Type1UndergraduateTimeSituation(Type1UndergraduateTime, Type1UndergraduateSituation);
 
 impl Inner for Type1UndergraduateTimeSituation {
     fn time(&self) -> Box<dyn Time> {
@@ -301,7 +303,7 @@ impl Inner for Type1UndergraduateTimeSituation {
 #[derive(Clone, Copy)]
 pub struct Type1UndergraduateTime {
     year: (u32, u32),
-    month: (u8, u8)
+    month: (u8, u8),
 }
 impl Time for Type1UndergraduateTime {
     fn year(&self) -> Option<(u32, u32)> {
@@ -314,7 +316,7 @@ impl Time for Type1UndergraduateTime {
 #[derive(Clone)]
 pub struct Type1UndergraduateSituation {
     province: String,
-    city: String
+    city: String,
 }
 
 impl Situation for Type1UndergraduateSituation {
@@ -330,7 +332,7 @@ pub struct Type1Internship<'a> {
     company: &'a str,
     position: &'a str,
     content: Vec<&'a str>,
-    time_situation: Type1WorkTimeSituation
+    time_situation: Type1WorkTimeSituation,
 }
 
 impl<'a> IntoInner for Type1Internship<'a> {
@@ -358,7 +360,7 @@ pub struct Type1FullTimeWork<'a> {
     company: &'a str,
     position: &'a str,
     content: Vec<&'a str>,
-    time_situation: Type1WorkTimeSituation
+    time_situation: Type1WorkTimeSituation,
 }
 
 impl<'a> IntoInner for Type1FullTimeWork<'a> {
@@ -383,10 +385,7 @@ impl<'a> WorkInner for Type1FullTimeWork<'a> {
 }
 
 #[derive(Clone)]
-pub struct Type1WorkTimeSituation (
-    Type1WorkTime,
-    Type1WorkSituation
-);
+pub struct Type1WorkTimeSituation(Type1WorkTime, Type1WorkSituation);
 impl Inner for Type1WorkTimeSituation {
     fn time(&self) -> Box<dyn Time> {
         Box::new(self.0)
@@ -399,7 +398,7 @@ impl Inner for Type1WorkTimeSituation {
 #[derive(Clone, Copy)]
 pub struct Type1WorkTime {
     year: (u32, u32),
-    month: (u8, u8)
+    month: (u8, u8),
 }
 impl Time for Type1WorkTime {
     fn year(&self) -> Option<(u32, u32)> {
@@ -413,7 +412,7 @@ impl Time for Type1WorkTime {
 #[derive(Clone)]
 pub struct Type1WorkSituation {
     province: String,
-    city: String
+    city: String,
 }
 impl Situation for Type1WorkSituation {
     fn province(&self) -> Option<String> {
@@ -428,7 +427,7 @@ pub struct Type1ProjectInner<'a> {
     proj_name: &'a str,
     group: &'a str,
     lang: Option<&'a str>,
-    time_situation: Type1ProjTimeSituation
+    time_situation: Type1ProjTimeSituation,
 }
 
 impl<'a> IntoInner for Type1ProjectInner<'a> {
@@ -454,10 +453,7 @@ impl<'a> ProjInner for Type1ProjectInner<'a> {
 }
 
 #[derive(Clone, Copy)]
-pub struct Type1ProjTimeSituation (
-    Type1ProjTime,
-    Type1ProjSituation
-);
+pub struct Type1ProjTimeSituation(Type1ProjTime, Type1ProjSituation);
 
 impl Inner for Type1ProjTimeSituation {
     fn time(&self) -> Box<dyn Time> {
@@ -471,7 +467,7 @@ impl Inner for Type1ProjTimeSituation {
 #[derive(Clone, Copy)]
 pub struct Type1ProjTime {
     year: (u32, u32),
-    month: (u8, u8)
+    month: (u8, u8),
 }
 impl Time for Type1ProjTime {
     fn year(&self) -> Option<(u32, u32)> {
@@ -492,3 +488,48 @@ impl Situation for Type1ProjSituation {
         None
     }
 }
+
+pub struct Type1HonorInner<'a> {
+    honor: &'a str,
+    description: &'a str,
+    time: (u32, u8), // (year, month)
+    time_situation: Type1HonorTimeSituation,
+}
+
+impl<'a> IntoInner for Type1HonorInner<'a> {
+    fn to_inner(&self) -> Box<dyn Inner> {
+        Box::new(self.time_situation)
+    }
+}
+
+impl<'a> HonorInner for Type1HonorInner<'a> {
+    fn honor(&self) -> String {
+        String::from(self.honor)
+    }
+    fn description(&self) -> String {
+        String::from(self.description)
+    }
+    fn time(&self) -> (u32, u8) {
+        self.time
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1HonorTimeSituation(Type1HonorTime, Type1HonorSituation);
+
+impl Inner for Type1HonorTimeSituation {
+    fn time(&self) -> Box<dyn Time> {
+        Box::new(self.0)
+    }
+    fn situation(&self) -> Box<dyn Situation> {
+        Box::new(self.1)
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1HonorTime {}
+impl Time for Type1HonorTime {}
+
+#[derive(Clone, Copy, Default)]
+pub struct Type1HonorSituation {}
+impl Situation for Type1HonorSituation {}
