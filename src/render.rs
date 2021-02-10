@@ -10,11 +10,11 @@ extern crate lazy_static;
 use crate::{addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month};
 use crate::{
     education::{Degree, EduInner},
+    honor::HonorInner,
     info::InfoInner,
     proj::ProjInner,
     template::Template,
     work::WorkInner,
-    honor::HonorInner,
 };
 use latex::{Document, Element, PreambleElement, Section};
 use lazy_static::lazy_static;
@@ -78,10 +78,10 @@ impl Type1Render {
             (u8, u8),   // 4. month
         )>,
         honor: &'static Vec<(
-            S,          // 0. honor name
-            S,          // 1. honor description
-            (u32, u8)   // 2. honor time (year, month)
-        )>
+            S,         // 0. honor name
+            S,         // 1. honor description
+            (u32, u8), // 2. honor time (year, month)
+        )>,
     ) -> Document
     where
         S: AsRef<str>,
@@ -187,7 +187,7 @@ impl Type1Render {
             template.project(&d.0, &d.1, d.2.as_ref(), (d.3 .0, d.3 .1), (d.4 .0, d.4 .1));
         }
         for d in honor {
-            template.honor(&d.0, &d.1, (d.2.0, d.2.1));
+            template.honor(&d.0, &d.1, (d.2 .0, d.2 .1));
         }
         for elem in &template.resume().elements {
             if let Some(info) = elem.info_inner() {
@@ -908,11 +908,7 @@ fn type1_render_honor_test() {
     use crate::template::type1::TemplateType1;
     use crate::template::Template;
     let mut template = TemplateType1::new();
-    template.honor(
-        &(*TEST_HONOR),
-        &(*TEST_DESCRIPTION),
-        (2030, 10)
-    );
+    template.honor(&(*TEST_HONOR), &(*TEST_DESCRIPTION), (2030, 10));
     let resume = template.resume();
     let mut doc = Document::default();
     let doc = Type1Render::render_honor_head(&mut doc);
