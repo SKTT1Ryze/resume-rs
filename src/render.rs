@@ -9,7 +9,7 @@ extern crate latex;
 extern crate lazy_static;
 use latex::{Document, Element, PreambleElement, Section};
 use lazy_static::lazy_static;
-use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{Template}, work::{WorkInner}};
+use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{Template}, work::{WorkInner}, proj::ProjInner};
 use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
 
 lazy_static! {
@@ -29,6 +29,9 @@ lazy_static! {
             String::from("Game Server Testing"),
             ]
     };
+    static ref TEST_PROJ: String = String::from("RISC-V Processor With Rustlang");
+    static ref TEST_GROUP: String = String::from("RISC-V Foundation");
+    static ref TEST_LANG: String = String::from("Rust");
 }
 
 pub struct Type1Render {}
@@ -69,7 +72,6 @@ impl Type1Render {
     where S: AsRef<str>
     {
         use crate::template::type1::TemplateType1;
-        use crate::template::Template;
         let mut doc = Document::default();
         let mut template = TemplateType1::new();
         doc.preamble.use_package("latexsym");
@@ -362,6 +364,56 @@ impl Type1Render {
         doc.push(Element::UserDefined(section));
         doc
     }
+
+    pub fn render_proj_head(doc: &mut Document) -> &mut Document {
+        let mut section = Section::new("Projects and Research");
+        section.push(r"\CVSubHeadingListStart
+%   \CVSubheading
+%      {Title of Work}{When}
+%      {Institution you worked with}{where}");
+        doc.push(section);
+        doc
+    }
+
+    pub fn render_proj_tail(doc: &mut Document) -> &mut Document {
+        let mut section = String::from("");
+        section.push_str(r"\CVSubHeadingListEnd");
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
+    pub fn render_project<'a>(doc: &'a mut Document, projs: &Vec<Box<&'a dyn ProjInner>>) -> &'a mut Document {
+        let mut section = String::from("");
+        for p in projs {
+            let proj_name = p.project();
+            let group = p.group();
+            let lang = match p.lang() {
+                Some(l) => l,
+                None => String::from("")
+            };
+            let year = p.to_inner().time().year();
+            let month = p.to_inner().time().month();
+            let time = ifhavemonthyear!(year, month);
+            let province_city = ifhavecityprovince!(
+                p.to_inner().situation().province(),
+                p.to_inner().situation().city()
+            );
+            section.push_str("    \\CVSubheading\n");
+            section.push_str(format!(
+                r"
+    {{{{{}}} $|$ \emph{{\small{{{}}}}}}}{{{}}}
+    {{{}}}{{{}}}",
+                proj_name,
+                lang,
+                time,
+                group,
+                province_city
+            ).as_str());
+        }
+        doc.push(Element::UserDefined(section));
+        doc
+    }
+
 }
 
 #[macro_export]
@@ -664,6 +716,60 @@ fn type1_render_work_test() {
         \CVItem{{Developing LOL in RIOT}}
         \CVItem{{Game Server Testing}}
     \CVItemListEnd
+\CVSubHeadingListEnd
+\end{{document}}
+");
+    assert_eq!(
+        should_be,
+        latex::print(&doc).unwrap()
+    );
+}
+
+#[test]
+fn type1_render_proj_test() {
+    use crate::template::type1::TemplateType1;
+    use crate::template::Template;
+    let mut template = TemplateType1::new();
+    template.project(
+        &(*TEST_PROJ),
+        &(*TEST_GROUP),
+        Some(&(*TEST_LANG)),
+        (2030, 2032),
+        (3, 3)       
+    );
+    template.project(
+        &(*TEST_PROJ),
+        &(*TEST_GROUP),
+        Some(&(*TEST_LANG)),
+        (2030, 2032),
+        (3, 3)       
+    );
+    let resume = template.resume();
+    let mut doc = Document::default();
+    let doc = Type1Render::render_proj_head(&mut doc);
+    for elem in &resume.elements {
+        if let Some(projs) = elem.proj_inner() {
+            Type1Render::render_project(doc, &projs);
+        }
+    }
+    Type1Render::render_proj_tail(doc);
+    let should_be = format!(r"\documentclass{{article}}
+\begin{{document}}
+\section{{Projects and Research}}
+
+\CVSubHeadingListStart
+%   \CVSubheading
+%      {{Title of Work}}{{When}}
+%      {{Institution you worked with}}{{where}}
+
+    \CVSubheading
+
+    {{{{RISC-V Processor With Rustlang}} $|$ \emph{{\small{{Rust}}}}}}{{March 2030 -- March 2032}}
+    {{RISC-V Foundation}}{{}}
+    \CVSubheading
+
+    {{{{RISC-V Processor With Rustlang}} $|$ \emph{{\small{{Rust}}}}}}{{March 2030 -- March 2032}}
+    {{RISC-V Foundation}}{{}}
 \CVSubHeadingListEnd
 \end{{document}}
 ");
