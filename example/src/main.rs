@@ -43,17 +43,39 @@ lazy_static! {
             (2, 2),
             (String::from("China"), String::from("Beijing")))
     ];
+    static ref PROJECT: Vec<(
+        String, String, Option<String>, (u32, u32), (u8, u8)
+    )> = vec![
+        (
+            String::from("RISC-V Superscalar Out-of-Order Processor"),
+            String::from("Sifive"),
+            Some(String::from("Rust \\& Chisel")),
+            (2030, 2033), (7, 7)
+        ),
+        (
+            String::from("Alpha Go Plus"),
+            String::from("Google"),
+            Some(String::from("Rust \\& C \\& C++")),
+            (2034, 2036), (8, 8)
+        ),
+        (
+            String::from("Async Kernel"),
+            String::from("Home"),
+            Some(String::from("Rust")),
+            (2020, 2021), (12, 8)
+        )
+    ];
 }
 
 fn main() {
     let latex_doc = Type1Render::render(
-        (-1, -1, 2, -1, 2),
         &(*NAME),
         &(*PHONE),
         &(*EMAIL),
         &(*GITHUB),
         &(*EDUCATION),
-        &(*WORK)
+        &(*WORK),
+        &(*PROJECT)
     );
     println!("{}", latex::print(&latex_doc).unwrap());
 }

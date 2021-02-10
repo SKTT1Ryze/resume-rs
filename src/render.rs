@@ -9,7 +9,7 @@ extern crate latex;
 extern crate lazy_static;
 use latex::{Document, Element, PreambleElement, Section};
 use lazy_static::lazy_static;
-use crate::{education::{EduInner, Degree}, info::{InfoInner}, template::{Template}, work::{WorkInner}, proj::ProjInner};
+use crate::{education::{EduInner, Degree}, info::{InfoInner}, proj::ProjInner, template::{self, Template}, work::{WorkInner}};
 use crate::{addtolength, ifhaveinfo, ifhavemonthyear, ifhavecityprovince, month};
 
 lazy_static! {
@@ -42,13 +42,6 @@ impl Type1Render {
     }
 
     pub fn render<S>(
-        typography: (
-            i32, // 0. oddsidemargin
-            i32, // 1. evensidemargin
-            i32, // 2. textwidth
-            i32, // 3. topmargin
-            i32 // 4. textheight
-        ),
         name: &'static S,
         phone: &'static S,
         email: &'static S,
@@ -67,7 +60,14 @@ impl Type1Render {
             (u32, u32), // 3. year
             (u8, u8), // 4. month
             (S, S) // 5. situation
-        )>
+        )>,
+        project: &'static Vec<(
+            S, // 0. project name
+            S, // 1. group,
+            Option<S>, // 2. lang
+            (u32, u32), // 3. year
+            (u8, u8), // 4. month
+        )>,
     ) -> Document
     where S: AsRef<str>
     {
@@ -166,6 +166,11 @@ impl Type1Render {
                 &d.0, &d.1, &d.2, d.3, d.4, (&d.5.0, &d.5.1)
             );
         }
+        for d in project {
+            template.project(
+                &d.0, &d.1, d.2.as_ref(), (d.3.0, d.3.1), (d.4.0, d.4.1)
+            );
+        }
         for elem in &template.resume().elements {
             if let Some(info) = elem.info_inner() {
                 Type1Render::render_info(&mut doc, info);
@@ -185,6 +190,13 @@ impl Type1Render {
             }
         }
         Self::render_work_tail(&mut doc);
+        Self::render_proj_head(&mut doc);
+        for elem in &template.resume().elements {
+            if let Some(project) = elem.proj_inner() {
+                Self::render_project(&mut doc, &project);
+            }
+        }
+        Self::render_proj_tail(&mut doc);
         doc
     }
 
@@ -398,7 +410,7 @@ impl Type1Render {
                 p.to_inner().situation().province(),
                 p.to_inner().situation().city()
             );
-            section.push_str("    \\CVSubheading\n");
+            section.push_str("    \\CVSubheading");
             section.push_str(format!(
                 r"
     {{{{{}}} $|$ \emph{{\small{{{}}}}}}}{{{}}}
@@ -763,11 +775,9 @@ fn type1_render_proj_test() {
 %      {{Institution you worked with}}{{where}}
 
     \CVSubheading
-
     {{{{RISC-V Processor With Rustlang}} $|$ \emph{{\small{{Rust}}}}}}{{March 2030 -- March 2032}}
     {{RISC-V Foundation}}{{}}
     \CVSubheading
-
     {{{{RISC-V Processor With Rustlang}} $|$ \emph{{\small{{Rust}}}}}}{{March 2030 -- March 2032}}
     {{RISC-V Foundation}}{{}}
 \CVSubHeadingListEnd
