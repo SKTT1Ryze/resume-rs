@@ -8,9 +8,7 @@
 extern crate latex;
 extern crate lazy_static;
 use crate::{
-    addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month,
-    skill::{self, SkillInner},
-    template,
+    addtolength, ifhavecityprovince, ifhaveinfo, ifhavemonthyear, month, skill::SkillInner,
 };
 use crate::{
     education::{Degree, EduInner},
