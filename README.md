@@ -15,7 +15,7 @@ So, don't make it seriously.(hhh)
 Add some dependencies to your `Cargo.toml`  
 ```Toml
 [dependencies]
-resume = { git = "https://github.com/SKTT1Ryze/resume-rs" }
+resume = { git = "https://github.com/SKTT1Ryze/resume-rs", branch = "main" }
 lazy_static = "1.4.0"
 latex = { git = "https://github.com/SKTT1Ryze/latex-rs" }
 ```
